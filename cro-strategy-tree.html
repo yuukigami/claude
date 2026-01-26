@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRO Strategy Tree Builder</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
         * {
             margin: 0;
             padding: 0;
@@ -51,7 +53,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-secondary);
             color: var(--text-primary);
             line-height: 1.6;
@@ -204,7 +206,8 @@
         [data-mode="present"] .add-theme-btn,
         [data-mode="present"] .add-problem-btn,
         [data-mode="present"] .add-experiment-btn,
-        [data-mode="present"] .delete-btn {
+        [data-mode="present"] .delete-btn,
+        [data-mode="present"] [class*="add-"] {
             display: none !important;
         }
 
@@ -1200,8 +1203,8 @@
                     localStorage.setItem('theme', newTheme);
                 });
 
-                // Load saved theme
-                const savedTheme = localStorage.getItem('theme') || 'light';
+                // Load saved theme (default to dark)
+                const savedTheme = localStorage.getItem('theme') || 'dark';
                 document.documentElement.setAttribute('data-theme', savedTheme);
 
                 // File import
@@ -1269,6 +1272,9 @@
                 if (save) {
                     localStorage.setItem('viewMode', mode);
                 }
+
+                // Recalculate layout after mode change
+                setTimeout(() => this.syncWidths(), 0);
             }
 
             toggleQuickStart() {
