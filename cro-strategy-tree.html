@@ -168,6 +168,94 @@
             transform: translateX(24px);
         }
 
+        /* Mode Toggle */
+        .mode-toggle {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 2px;
+            border: 2px solid var(--border-color);
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .mode-btn:hover {
+            transform: none;
+            box-shadow: none;
+            background: var(--bg-primary);
+        }
+
+        .mode-btn.active {
+            background: var(--kpi-color);
+            color: white;
+        }
+
+        /* Present Mode Styles */
+        [data-mode="present"] .add-theme-btn,
+        [data-mode="present"] .add-problem-btn,
+        [data-mode="present"] .add-experiment-btn,
+        [data-mode="present"] .delete-btn {
+            display: none !important;
+        }
+
+        [data-mode="present"] .quick-start-panel {
+            display: none !important;
+        }
+
+        [data-mode="present"] .item-box,
+        [data-mode="present"] .kpi-box,
+        [data-mode="present"] .theme-box,
+        [data-mode="present"] .problem-box,
+        [data-mode="present"] .experiment-box {
+            cursor: default;
+            pointer-events: none;
+        }
+
+        [data-mode="present"] .kpi-box:hover,
+        [data-mode="present"] .theme-box:hover,
+        [data-mode="present"] .problem-box:hover,
+        [data-mode="present"] .experiment-box:hover {
+            transform: none;
+            box-shadow: var(--shadow);
+        }
+
+        .present-controls {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        [data-mode="present"] .present-controls {
+            display: flex;
+        }
+
+        .return-to-edit {
+            background: var(--kpi-color);
+            color: white;
+            border-color: var(--kpi-color);
+            padding: 12px 20px;
+            font-size: 14px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .return-to-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
         /* Quick Start Panel */
         .quick-start-panel {
             background: var(--bg-primary);
@@ -647,11 +735,15 @@
             background: var(--bg-primary);
             border-radius: 12px;
             padding: 30px;
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
             box-shadow: var(--shadow-lg);
             max-height: 90vh;
             overflow-y: auto;
+        }
+
+        .modal-content.large {
+            max-width: 900px;
         }
 
         .modal-header {
@@ -699,13 +791,122 @@
             box-shadow: var(--shadow);
         }
 
+        /* Smart Import Styles */
+        .smart-import-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .smart-import-textarea:focus {
+            outline: none;
+            border-color: var(--kpi-color);
+        }
+
+        .preview-item {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .preview-item-header {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .preview-item-text {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .preview-item-text:focus {
+            outline: none;
+            border-color: var(--kpi-color);
+        }
+
+        .preview-item-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .preview-item-controls label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .preview-item-controls select {
+            padding: 6px 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .delete-preview-btn {
+            padding: 6px 10px;
+            background: #fee;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .delete-preview-btn:hover {
+            background: #dc3545;
+            color: white;
+            transform: none;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .preview-empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
         /* Print styles */
         @media print {
             body {
                 background: white;
             }
             .quick-start-panel,
-            header .header-controls {
+            .header-controls,
+            .mode-toggle,
+            .add-theme-btn,
+            .add-problem-btn,
+            .add-experiment-btn,
+            .delete-btn,
+            .present-controls {
                 display: none !important;
             }
             .strategy-grid {
@@ -791,12 +992,17 @@
         }
     </style>
 </head>
-<body>
+<body data-mode="edit">
     <div class="container">
         <header>
             <h1>CRO Strategy Tree Builder</h1>
             <div class="header-controls">
+                <div class="mode-toggle">
+                    <button class="mode-btn active" data-mode="edit" onclick="app.setMode('edit')">✏️ Edit</button>
+                    <button class="mode-btn" data-mode="present" onclick="app.setMode('present')">📊 Present</button>
+                </div>
                 <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode"></button>
+                <button onclick="app.openSmartImport()" class="secondary">📋 Smart Import</button>
                 <button onclick="app.toggleQuickStart()" class="secondary">Quick Start</button>
                 <label class="file-input-label">
                     Import JSON
@@ -900,10 +1106,60 @@
         </div>
     </div>
 
+    <!-- Present Mode Controls -->
+    <div class="present-controls">
+        <button onclick="window.print()" class="secondary">🖨️ Print</button>
+        <button onclick="app.setMode('edit')" class="return-to-edit">✏️ Return to Edit</button>
+    </div>
+
     <!-- Context Menu -->
     <div class="context-menu" id="contextMenu">
         <button onclick="app.contextEdit()">Edit</button>
         <button onclick="app.contextDelete()" class="danger">Delete</button>
+    </div>
+
+    <!-- Smart Import Modal -->
+    <div class="modal" id="smartImportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📋 Smart Import</h3>
+                <button class="close-modal" onclick="app.closeSmartImport()">&times;</button>
+            </div>
+            <div>
+                <p style="margin-bottom: 15px; color: var(--text-secondary); font-size: 14px;">
+                    Paste your unstructured text below. We'll automatically detect KPIs, themes, problems, and experiments.
+                </p>
+                <textarea
+                    class="smart-import-textarea"
+                    id="smartImportText"
+                    placeholder="Example:&#10;&#10;Main Goal: Increase checkout conversion by 20%&#10;&#10;Theme 1: Reduce Friction&#10;- Problem: Users abandon at shipping step&#10;  * Experiment: Simplify shipping options&#10;  * Experiment: Add progress indicator&#10;- Problem: Too many form fields&#10;  * Experiment: Reduce to essential fields only&#10;&#10;Theme 2: Build Trust&#10;- Problem: No security badges visible&#10;  * Experiment: Add trust seals above payment"
+                ></textarea>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="app.parseSmartImport()" class="primary">Parse Text</button>
+                    <button onclick="app.closeSmartImport()" class="secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Import Preview Modal -->
+    <div class="modal" id="smartImportPreviewModal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>📋 Smart Import Preview</h3>
+                <button class="close-modal" onclick="app.closePreview()">&times;</button>
+            </div>
+            <div>
+                <p style="margin-bottom: 15px; color: var(--text-secondary); font-size: 14px;">
+                    Review and adjust the detected items below. You can edit text, change types, and assign parents.
+                </p>
+                <div id="previewContainer"></div>
+                <div class="modal-footer">
+                    <button onclick="app.closePreview()" class="secondary">Cancel</button>
+                    <button onclick="app.importParsedItems()" class="primary">Import Selected</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -916,6 +1172,7 @@
                 this.contextTarget = null;
                 this.contextType = null;
                 this.contextIndex = null;
+                this.parsedItems = [];
                 this.init();
             }
 
@@ -928,6 +1185,10 @@
                 if (!this.data.kpi && this.data.themes.length === 0) {
                     document.getElementById('quickStartPanel').classList.remove('minimized');
                 }
+
+                // Load saved mode
+                const savedMode = localStorage.getItem('viewMode') || 'edit';
+                this.setMode(savedMode, false);
             }
 
             setupEventListeners() {
@@ -977,6 +1238,37 @@
                         this.saveToStorage();
                     }
                 });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    // Only trigger if not typing in an input/textarea
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                        return;
+                    }
+
+                    if (e.key === 'e' || e.key === 'E') {
+                        this.setMode('edit');
+                    } else if (e.key === 'p' || e.key === 'P') {
+                        this.setMode('present');
+                    }
+                });
+            }
+
+            setMode(mode, save = true) {
+                document.body.setAttribute('data-mode', mode);
+
+                // Update button states
+                document.querySelectorAll('.mode-btn').forEach(btn => {
+                    if (btn.getAttribute('data-mode') === mode) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+
+                if (save) {
+                    localStorage.setItem('viewMode', mode);
+                }
             }
 
             toggleQuickStart() {
@@ -996,6 +1288,365 @@
                 return text.split('\n')
                     .map(line => this.cleanText(line))
                     .filter(line => line.length > 0);
+            }
+
+            // Smart Import Functions
+            openSmartImport() {
+                document.getElementById('smartImportModal').classList.add('active');
+                document.getElementById('smartImportText').value = '';
+                document.getElementById('smartImportText').focus();
+            }
+
+            closeSmartImport() {
+                document.getElementById('smartImportModal').classList.remove('active');
+            }
+
+            closePreview() {
+                document.getElementById('smartImportPreviewModal').classList.remove('active');
+            }
+
+            parseSmartImport() {
+                const text = document.getElementById('smartImportText').value;
+                if (!text.trim()) {
+                    alert('Please enter some text to parse.');
+                    return;
+                }
+
+                this.parsedItems = this.detectItems(text);
+
+                if (this.parsedItems.length === 0) {
+                    alert('No items detected. Try adding keywords like "Goal:", "Theme:", "Problem:", or "Experiment:"');
+                    return;
+                }
+
+                this.renderPreview();
+                this.closeSmartImport();
+                document.getElementById('smartImportPreviewModal').classList.add('active');
+            }
+
+            detectItems(text) {
+                const lines = text.split('\n');
+                const items = [];
+                let currentTheme = null;
+                let currentProblem = null;
+                let lastIndent = 0;
+
+                const kpiKeywords = /\b(kpi|goal|objective|target|main\s+metric)\b/i;
+                const kpiPatterns = /\b(increase|decrease|improve|reduce|boost)\s+.+?\s+by\s+\d+%?/i;
+
+                const themeKeywords = /\b(theme|pillar|strategic|focus\s+area|initiative)\b/i;
+                const themePatterns = /^(theme|pillar|strategic)\s*\d*\s*:?/i;
+
+                const problemKeywords = /\b(problem|issue|challenge|pain\s+point|hypothesis|identified|obstacle)\b/i;
+                const problemPatterns = /(the\s+problem\s+is|we\s+found\s+that|users?\s+(struggle|abandon|can't|cannot))/i;
+
+                const experimentKeywords = /\b(experiment|test|idea|solution|try|a\/b\s+test|variant)\b/i;
+                const experimentPatterns = /(we\s+want\s+to\s+test|experiment\s+idea|try\s+)/i;
+
+                for (let line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed) continue;
+
+                    // Calculate indentation
+                    const indent = line.search(/\S/);
+                    const cleaned = this.cleanText(trimmed);
+
+                    // Detect type
+                    let type = 'experiment'; // default
+                    let parent = null;
+
+                    // KPI detection
+                    if (kpiKeywords.test(trimmed) || kpiPatterns.test(trimmed) ||
+                        /^(main\s+)?goal\s*:/i.test(trimmed)) {
+                        type = 'kpi';
+                    }
+                    // Theme detection
+                    else if (themeKeywords.test(trimmed) || themePatterns.test(trimmed) ||
+                             /^[A-Z\s]+:/.test(trimmed)) {
+                        type = 'theme';
+                        currentTheme = cleaned;
+                        currentProblem = null;
+                    }
+                    // Problem detection
+                    else if (problemKeywords.test(trimmed) || problemPatterns.test(trimmed)) {
+                        type = 'problem';
+                        parent = currentTheme;
+                        currentProblem = cleaned;
+                    }
+                    // Experiment detection or indentation-based
+                    else if (experimentKeywords.test(trimmed) || experimentPatterns.test(trimmed)) {
+                        type = 'experiment';
+                        parent = currentProblem;
+                    }
+                    // Indentation-based detection
+                    else if (indent > lastIndent) {
+                        // Indented item
+                        if (currentProblem) {
+                            type = 'experiment';
+                            parent = currentProblem;
+                        } else if (currentTheme) {
+                            type = 'problem';
+                            parent = currentTheme;
+                            currentProblem = cleaned;
+                        }
+                    } else if (indent === lastIndent && lastIndent > 0) {
+                        // Same level
+                        if (currentProblem) {
+                            type = 'experiment';
+                            parent = currentProblem;
+                        } else if (currentTheme) {
+                            type = 'problem';
+                            parent = currentTheme;
+                            currentProblem = cleaned;
+                        }
+                    }
+
+                    lastIndent = indent;
+
+                    items.push({
+                        text: cleaned,
+                        type: type,
+                        parent: parent
+                    });
+                }
+
+                return items;
+            }
+
+            renderPreview() {
+                const container = document.getElementById('previewContainer');
+                container.innerHTML = '';
+
+                if (this.parsedItems.length === 0) {
+                    container.innerHTML = '<div class="preview-empty">No items detected.</div>';
+                    return;
+                }
+
+                this.parsedItems.forEach((item, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'preview-item';
+
+                    const header = document.createElement('div');
+                    header.className = 'preview-item-header';
+
+                    const textInput = document.createElement('input');
+                    textInput.type = 'text';
+                    textInput.className = 'preview-item-text';
+                    textInput.value = item.text;
+                    textInput.addEventListener('input', (e) => {
+                        this.parsedItems[index].text = e.target.value;
+                    });
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-preview-btn';
+                    deleteBtn.innerHTML = '🗑️';
+                    deleteBtn.title = 'Remove this item';
+                    deleteBtn.onclick = () => {
+                        this.parsedItems.splice(index, 1);
+                        this.renderPreview();
+                    };
+
+                    header.appendChild(textInput);
+                    header.appendChild(deleteBtn);
+
+                    const controls = document.createElement('div');
+                    controls.className = 'preview-item-controls';
+
+                    // Type selector
+                    const typeLabel = document.createElement('label');
+                    typeLabel.textContent = 'Type: ';
+                    const typeSelect = document.createElement('select');
+                    ['kpi', 'theme', 'problem', 'experiment'].forEach(type => {
+                        const option = document.createElement('option');
+                        option.value = type;
+                        option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                        if (item.type === type) option.selected = true;
+                        typeSelect.appendChild(option);
+                    });
+                    typeSelect.addEventListener('change', (e) => {
+                        this.parsedItems[index].type = e.target.value;
+                        this.renderPreview();
+                    });
+                    controls.appendChild(typeLabel);
+                    controls.appendChild(typeSelect);
+
+                    // Parent selector (for problems and experiments)
+                    if (item.type === 'problem' || item.type === 'experiment') {
+                        const parentLabel = document.createElement('label');
+                        parentLabel.textContent = 'Parent: ';
+                        parentLabel.style.marginLeft = '10px';
+
+                        const parentSelect = document.createElement('select');
+                        const noneOption = document.createElement('option');
+                        noneOption.value = '';
+                        noneOption.textContent = '(None)';
+                        parentSelect.appendChild(noneOption);
+
+                        // Get potential parents
+                        const potentialParents = this.parsedItems.filter((p, i) => {
+                            if (item.type === 'problem') {
+                                return p.type === 'theme' && i < index;
+                            } else if (item.type === 'experiment') {
+                                return p.type === 'problem' && i < index;
+                            }
+                            return false;
+                        });
+
+                        potentialParents.forEach(parent => {
+                            const option = document.createElement('option');
+                            option.value = parent.text;
+                            option.textContent = parent.text;
+                            if (item.parent === parent.text) option.selected = true;
+                            parentSelect.appendChild(option);
+                        });
+
+                        parentSelect.addEventListener('change', (e) => {
+                            this.parsedItems[index].parent = e.target.value;
+                        });
+
+                        controls.appendChild(parentLabel);
+                        controls.appendChild(parentSelect);
+                    }
+
+                    itemDiv.appendChild(header);
+                    itemDiv.appendChild(controls);
+                    container.appendChild(itemDiv);
+                });
+            }
+
+            importParsedItems() {
+                if (this.parsedItems.length === 0) {
+                    alert('No items to import.');
+                    return;
+                }
+
+                let kpiCount = 0;
+                let themeCount = 0;
+                let problemCount = 0;
+                let experimentCount = 0;
+
+                // Process KPI first
+                const kpiItems = this.parsedItems.filter(item => item.type === 'kpi');
+                if (kpiItems.length > 0) {
+                    this.data.kpi = kpiItems[0].text; // Use first KPI
+                    kpiCount = 1;
+                }
+
+                // Process themes
+                const themeItems = this.parsedItems.filter(item => item.type === 'theme');
+                themeItems.forEach(themeItem => {
+                    const newTheme = {
+                        name: themeItem.text,
+                        problems: []
+                    };
+
+                    // Find problems for this theme
+                    const problemItems = this.parsedItems.filter(item =>
+                        item.type === 'problem' && item.parent === themeItem.text
+                    );
+
+                    problemItems.forEach(problemItem => {
+                        const newProblem = {
+                            name: problemItem.text,
+                            experiments: []
+                        };
+
+                        // Find experiments for this problem
+                        const experimentItems = this.parsedItems.filter(item =>
+                            item.type === 'experiment' && item.parent === problemItem.text
+                        );
+
+                        experimentItems.forEach(expItem => {
+                            newProblem.experiments.push({ name: expItem.text });
+                            experimentCount++;
+                        });
+
+                        newTheme.problems.push(newProblem);
+                        problemCount++;
+                    });
+
+                    this.data.themes.push(newTheme);
+                    themeCount++;
+                });
+
+                // Handle orphaned problems (no parent theme)
+                const orphanProblems = this.parsedItems.filter(item =>
+                    item.type === 'problem' && (!item.parent || !themeItems.find(t => t.text === item.parent))
+                );
+
+                if (orphanProblems.length > 0) {
+                    // Create an "Uncategorized" theme
+                    const uncategorized = {
+                        name: 'Uncategorized',
+                        problems: []
+                    };
+
+                    orphanProblems.forEach(problemItem => {
+                        const newProblem = {
+                            name: problemItem.text,
+                            experiments: []
+                        };
+
+                        const experimentItems = this.parsedItems.filter(item =>
+                            item.type === 'experiment' && item.parent === problemItem.text
+                        );
+
+                        experimentItems.forEach(expItem => {
+                            newProblem.experiments.push({ name: expItem.text });
+                            experimentCount++;
+                        });
+
+                        uncategorized.problems.push(newProblem);
+                        problemCount++;
+                    });
+
+                    this.data.themes.push(uncategorized);
+                    themeCount++;
+                }
+
+                // Handle orphaned experiments
+                const orphanExperiments = this.parsedItems.filter(item =>
+                    item.type === 'experiment' && !this.parsedItems.find(p => p.type === 'problem' && p.text === item.parent)
+                );
+
+                if (orphanExperiments.length > 0) {
+                    // Find or create Uncategorized theme
+                    let uncategorized = this.data.themes.find(t => t.name === 'Uncategorized');
+                    if (!uncategorized) {
+                        uncategorized = {
+                            name: 'Uncategorized',
+                            problems: []
+                        };
+                        this.data.themes.push(uncategorized);
+                        themeCount++;
+                    }
+
+                    // Create a generic problem for orphaned experiments
+                    const genericProblem = {
+                        name: 'General Experiments',
+                        experiments: []
+                    };
+
+                    orphanExperiments.forEach(expItem => {
+                        genericProblem.experiments.push({ name: expItem.text });
+                        experimentCount++;
+                    });
+
+                    uncategorized.problems.push(genericProblem);
+                    problemCount++;
+                }
+
+                this.saveToStorage();
+                this.render();
+                this.closePreview();
+
+                const summary = [];
+                if (kpiCount > 0) summary.push(`${kpiCount} KPI`);
+                if (themeCount > 0) summary.push(`${themeCount} theme(s)`);
+                if (problemCount > 0) summary.push(`${problemCount} problem(s)`);
+                if (experimentCount > 0) summary.push(`${experimentCount} experiment(s)`);
+
+                this.showSuccess(`Imported: ${summary.join(', ')}!`);
             }
 
             setKPI() {
@@ -1094,6 +1745,8 @@
             }
 
             editKPI(element) {
+                if (document.body.getAttribute('data-mode') === 'present') return;
+
                 const current = this.data.kpi || '';
                 const input = document.createElement('input');
                 input.type = 'text';
@@ -1124,6 +1777,8 @@
             }
 
             editTheme(element, themeIndex) {
+                if (document.body.getAttribute('data-mode') === 'present') return;
+
                 const current = this.data.themes[themeIndex].name;
                 const input = document.createElement('input');
                 input.type = 'text';
@@ -1153,6 +1808,8 @@
             }
 
             editProblem(element, themeIndex, problemIndex) {
+                if (document.body.getAttribute('data-mode') === 'present') return;
+
                 const current = this.data.themes[themeIndex].problems[problemIndex].name;
                 const input = document.createElement('input');
                 input.type = 'text';
@@ -1182,6 +1839,8 @@
             }
 
             editExperiment(element, themeIndex, problemIndex, experimentIndex) {
+                if (document.body.getAttribute('data-mode') === 'present') return;
+
                 const current = this.data.themes[themeIndex].problems[problemIndex].experiments[experimentIndex].name;
                 const input = document.createElement('input');
                 input.type = 'text';
