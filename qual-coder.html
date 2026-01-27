@@ -890,12 +890,8 @@
         // TRANSCRIPT LIST
         // ==========================================
 
-        async function renderTranscriptList() {
-            const transcripts = await dbGetAll('transcripts');
-            const excerpts = await dbGetAll('excerpts');
-
-            // Sort by createdAt descending
-            transcripts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        function renderTranscriptList() {
+            const transcripts = [...data.transcripts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
             const container = document.getElementById('transcript-list');
 
@@ -910,7 +906,7 @@
             }
 
             container.innerHTML = transcripts.map(t => {
-                const transcriptExcerpts = excerpts.filter(e => e.transcriptId === t.id);
+                const transcriptExcerpts = data.excerpts.filter(e => e.transcriptId === t.id);
                 const taggedCount = transcriptExcerpts.filter(e => e.tagIds && e.tagIds.length > 0).length;
                 const totalCount = transcriptExcerpts.length;
                 const date = new Date(t.createdAt).toLocaleDateString();
@@ -945,7 +941,7 @@
             document.getElementById('transcript-text').value = '';
         }
 
-        async function createTranscript() {
+        function createTranscript() {
             const title = document.getElementById('transcript-title').value.trim();
             const userLabel = document.getElementById('transcript-user').value.trim();
             const rawText = document.getElementById('transcript-text').value.trim();
@@ -969,7 +965,7 @@
                 updatedAt: new Date().toISOString()
             };
 
-            await dbAdd('transcripts', transcript);
+            data.transcripts.push(transcript);
 
             // Parse sentences and create excerpts
             const sentences = parseSentences(rawText);
@@ -982,9 +978,10 @@
                     tagIds: [],
                     createdAt: new Date().toISOString()
                 };
-                await dbAdd('excerpts', excerpt);
+                data.excerpts.push(excerpt);
             }
 
+            saveData();
             closeNewTranscriptModal();
             showToast(`Imported ${sentences.length} sentences`);
             openTranscript(transcript.id);
@@ -994,8 +991,8 @@
         // CODING VIEW
         // ==========================================
 
-        async function openTranscript(transcriptId) {
-            currentTranscript = await dbGet('transcripts', transcriptId);
+        function openTranscript(transcriptId) {
+            currentTranscript = data.transcripts.find(t => t.id === transcriptId);
 
             document.getElementById('coding-transcript-title').textContent = currentTranscript.title;
             document.getElementById('coding-transcript-meta').textContent = currentTranscript.userLabel;
@@ -1005,7 +1002,7 @@
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById('coding-view').classList.add('active');
 
-            await renderSentenceList();
+            renderSentenceList();
         }
 
         function backToList() {
@@ -1014,12 +1011,11 @@
             switchView('transcripts');
         }
 
-        async function renderSentenceList() {
-            const excerpts = await dbGetByIndex('excerpts', 'transcriptId', currentTranscript.id);
-            const tags = await dbGetAll('tags');
-
-            // Sort by index
-            excerpts.sort((a, b) => a.index - b.index);
+        function renderSentenceList() {
+            const excerpts = data.excerpts
+                .filter(e => e.transcriptId === currentTranscript.id)
+                .sort((a, b) => a.index - b.index);
+            const tags = data.tags;
 
             const container = document.getElementById('sentence-list');
 
@@ -1044,13 +1040,13 @@
                                 `).join('')}
                             </div>
                         </div>
-                        ${isSelected ? await renderTagPopover(excerpt) : ''}
+                        ${isSelected ? renderTagPopover(excerpt) : ''}
                     </div>
                 `;
             }).join('');
         }
 
-        async function selectExcerpt(excerptId, event) {
+        function selectExcerpt(excerptId, event) {
             if (event.target.closest('.tag-popover') || event.target.closest('.tag-remove')) {
                 return;
             }
@@ -1061,7 +1057,7 @@
                 selectedExcerptId = excerptId;
             }
 
-            await renderSentenceList();
+            renderSentenceList();
 
             // Focus search input if popover is open
             if (selectedExcerptId) {
@@ -1072,14 +1068,8 @@
             }
         }
 
-        async function renderTagPopover(excerpt) {
-            const tags = await dbGetAll('tags');
-
-            // Sort tags by usage count descending
-            tags.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
-
-            const recentTags = tags.slice(0, 5);
-            const allTags = tags;
+        function renderTagPopover(excerpt) {
+            const tags = [...data.tags].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
 
             return `
                 <div class="tag-popover active" onclick="event.stopPropagation()">
@@ -1136,40 +1126,37 @@
             return html;
         }
 
-        async function filterTagOptions(query) {
-            const tags = await dbGetAll('tags');
-            tags.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
-
-            const excerpt = await dbGet('excerpts', selectedExcerptId);
+        function filterTagOptions(query) {
+            const tags = [...data.tags].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
+            const excerpt = data.excerpts.find(e => e.id === selectedExcerptId);
 
             const container = document.getElementById('tag-options-container');
-            container.innerHTML = renderTagOptions(tags, excerpt.tagIds || [], query);
+            container.innerHTML = renderTagOptions(tags, excerpt?.tagIds || [], query);
         }
 
-        async function handleTagSearchKeydown(event, excerptId) {
+        function handleTagSearchKeydown(event, excerptId) {
             if (event.key === 'Enter') {
                 const query = event.target.value.trim().toLowerCase();
                 if (!query) return;
 
-                const tags = await dbGetAll('tags');
-                const exactMatch = tags.find(t => t.name.toLowerCase() === query);
+                const exactMatch = data.tags.find(t => t.name.toLowerCase() === query);
 
                 if (exactMatch) {
-                    await toggleTag(exactMatch.id, event);
+                    toggleTag(exactMatch.id, event);
                 } else {
-                    await createAndApplyTag(query);
+                    createAndApplyTag(query);
                 }
             } else if (event.key === 'Escape') {
                 selectedExcerptId = null;
-                await renderSentenceList();
+                renderSentenceList();
             }
         }
 
-        async function toggleTag(tagId, event) {
+        function toggleTag(tagId, event) {
             if (event) event.stopPropagation();
 
-            const excerpt = await dbGet('excerpts', selectedExcerptId);
-            const tag = await dbGet('tags', tagId);
+            const excerpt = data.excerpts.find(e => e.id === selectedExcerptId);
+            const tag = data.tags.find(t => t.id === tagId);
 
             if (!excerpt.tagIds) excerpt.tagIds = [];
 
@@ -1184,9 +1171,8 @@
                 tag.usageCount = Math.max(0, (tag.usageCount || 1) - 1);
             }
 
-            await dbPut('excerpts', excerpt);
-            await dbPut('tags', tag);
-            await renderSentenceList();
+            saveData();
+            renderSentenceList();
 
             // Refocus search input
             setTimeout(() => {
@@ -1195,12 +1181,11 @@
             }, 50);
         }
 
-        async function createAndApplyTag(name) {
+        function createAndApplyTag(name) {
             const normalizedName = name.toLowerCase().trim();
 
             // Check if tag already exists
-            const tags = await dbGetAll('tags');
-            let tag = tags.find(t => t.name.toLowerCase() === normalizedName);
+            let tag = data.tags.find(t => t.name.toLowerCase() === normalizedName);
 
             if (!tag) {
                 tag = {
@@ -1209,45 +1194,42 @@
                     usageCount: 0,
                     createdAt: new Date().toISOString()
                 };
-                await dbAdd('tags', tag);
+                data.tags.push(tag);
             }
 
             // Apply to current excerpt
-            const excerpt = await dbGet('excerpts', selectedExcerptId);
+            const excerpt = data.excerpts.find(e => e.id === selectedExcerptId);
             if (!excerpt.tagIds) excerpt.tagIds = [];
 
             if (!excerpt.tagIds.includes(tag.id)) {
                 excerpt.tagIds.push(tag.id);
                 tag.usageCount = (tag.usageCount || 0) + 1;
-                await dbPut('excerpts', excerpt);
-                await dbPut('tags', tag);
             }
 
-            await renderSentenceList();
+            saveData();
+            renderSentenceList();
             showToast(`Created and applied tag "${normalizedName}"`);
         }
 
-        async function removeTagFromExcerpt(excerptId, tagId, event) {
+        function removeTagFromExcerpt(excerptId, tagId, event) {
             event.stopPropagation();
 
-            const excerpt = await dbGet('excerpts', excerptId);
-            const tag = await dbGet('tags', tagId);
+            const excerpt = data.excerpts.find(e => e.id === excerptId);
+            const tag = data.tags.find(t => t.id === tagId);
 
             excerpt.tagIds = excerpt.tagIds.filter(id => id !== tagId);
             tag.usageCount = Math.max(0, (tag.usageCount || 1) - 1);
 
-            await dbPut('excerpts', excerpt);
-            await dbPut('tags', tag);
-            await renderSentenceList();
+            saveData();
+            renderSentenceList();
         }
 
         // ==========================================
         // DATABASE VIEW
         // ==========================================
 
-        async function renderDatabaseView() {
-            const tags = await dbGetAll('tags');
-            tags.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
+        function renderDatabaseView() {
+            const tags = [...data.tags].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
 
             // Update filter dropdown
             const filterSelect = document.getElementById('tag-filter');
@@ -1256,18 +1238,14 @@
                 ${tags.map(t => `<option value="${t.id}">${escapeHtml(t.name)} (${t.usageCount || 0})</option>`).join('')}
             `;
 
-            await filterByTag();
+            filterByTag();
         }
 
-        async function filterByTag() {
+        function filterByTag() {
             const selectedTagId = document.getElementById('tag-filter').value;
 
-            const excerpts = await dbGetAll('excerpts');
-            const transcripts = await dbGetAll('transcripts');
-            const tags = await dbGetAll('tags');
-
             // Filter excerpts that have at least one tag
-            let filtered = excerpts.filter(e => e.tagIds && e.tagIds.length > 0);
+            let filtered = data.excerpts.filter(e => e.tagIds && e.tagIds.length > 0);
 
             // Further filter by selected tag
             if (selectedTagId) {
@@ -1296,8 +1274,8 @@
             }
 
             container.innerHTML = filtered.map(excerpt => {
-                const transcript = transcripts.find(t => t.id === excerpt.transcriptId);
-                const excerptTags = tags.filter(t => excerpt.tagIds.includes(t.id));
+                const transcript = data.transcripts.find(t => t.id === excerpt.transcriptId);
+                const excerptTags = data.tags.filter(t => excerpt.tagIds.includes(t.id));
 
                 return `
                     <div class="excerpt-card">
@@ -1312,7 +1290,7 @@
                 `;
             }).join('');
 
-            const selectedTag = tags.find(t => t.id === selectedTagId);
+            const selectedTag = data.tags.find(t => t.id === selectedTagId);
             document.getElementById('results-count').textContent =
                 `Showing ${filtered.length} excerpt${filtered.length !== 1 ? 's' : ''}${selectedTag ? ` with tag "${selectedTag.name}"` : ''}`;
         }
@@ -1322,28 +1300,30 @@
         // ==========================================
 
         function deleteTranscript(transcriptId) {
-            pendingConfirmAction = async () => {
+            pendingConfirmAction = () => {
                 // Delete all excerpts for this transcript
-                const excerpts = await dbGetByIndex('excerpts', 'transcriptId', transcriptId);
-                for (const excerpt of excerpts) {
+                const transcriptExcerpts = data.excerpts.filter(e => e.transcriptId === transcriptId);
+                for (const excerpt of transcriptExcerpts) {
                     // Update tag usage counts
                     if (excerpt.tagIds) {
                         for (const tagId of excerpt.tagIds) {
-                            const tag = await dbGet('tags', tagId);
+                            const tag = data.tags.find(t => t.id === tagId);
                             if (tag) {
                                 tag.usageCount = Math.max(0, (tag.usageCount || 1) - 1);
-                                await dbPut('tags', tag);
                             }
                         }
                     }
-                    await dbDelete('excerpts', excerpt.id);
                 }
 
-                // Delete transcript
-                await dbDelete('transcripts', transcriptId);
+                // Remove excerpts for this transcript
+                data.excerpts = data.excerpts.filter(e => e.transcriptId !== transcriptId);
 
+                // Delete transcript
+                data.transcripts = data.transcripts.filter(t => t.id !== transcriptId);
+
+                saveData();
                 showToast('Transcript deleted');
-                await renderTranscriptList();
+                renderTranscriptList();
             };
 
             document.getElementById('confirm-title').textContent = 'Delete Transcript';
@@ -1356,9 +1336,9 @@
             pendingConfirmAction = null;
         }
 
-        async function confirmAction() {
+        function confirmAction() {
             if (pendingConfirmAction) {
-                await pendingConfirmAction();
+                pendingConfirmAction();
             }
             closeConfirmModal();
         }
@@ -1424,47 +1404,50 @@
             document.getElementById('import-file').click();
         }
 
-        async function handleImportFile(event) {
+        function handleImportFile(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            try {
-                const text = await file.text();
-                const importedData = JSON.parse(text);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
 
-                if (!importedData.version || !importedData.transcripts || !importedData.excerpts || !importedData.tags) {
-                    throw new Error('Invalid backup file format');
-                }
-
-                // Merge imported data with existing data
-                for (const tag of importedData.tags) {
-                    const existing = data.tags.find(t => t.id === tag.id);
-                    if (!existing) {
-                        data.tags.push(tag);
+                    if (!importedData.version || !importedData.transcripts || !importedData.excerpts || !importedData.tags) {
+                        throw new Error('Invalid backup file format');
                     }
-                }
 
-                for (const transcript of importedData.transcripts) {
-                    const existing = data.transcripts.find(t => t.id === transcript.id);
-                    if (!existing) {
-                        data.transcripts.push(transcript);
+                    // Merge imported data with existing data
+                    for (const tag of importedData.tags) {
+                        const existing = data.tags.find(t => t.id === tag.id);
+                        if (!existing) {
+                            data.tags.push(tag);
+                        }
                     }
-                }
 
-                for (const excerpt of importedData.excerpts) {
-                    const existing = data.excerpts.find(e => e.id === excerpt.id);
-                    if (!existing) {
-                        data.excerpts.push(excerpt);
+                    for (const transcript of importedData.transcripts) {
+                        const existing = data.transcripts.find(t => t.id === transcript.id);
+                        if (!existing) {
+                            data.transcripts.push(transcript);
+                        }
                     }
+
+                    for (const excerpt of importedData.excerpts) {
+                        const existing = data.excerpts.find(e => e.id === excerpt.id);
+                        if (!existing) {
+                            data.excerpts.push(excerpt);
+                        }
+                    }
+
+                    saveData();
+                    showToast(`Imported ${importedData.transcripts.length} transcripts`);
+                    renderTranscriptList();
+
+                } catch (err) {
+                    showToast('Failed to import: ' + err.message, 'error');
                 }
-
-                saveData();
-                showToast(`Imported ${importedData.transcripts.length} transcripts`);
-                await renderTranscriptList();
-
-            } catch (e) {
-                showToast('Failed to import: ' + e.message, 'error');
-            }
+            };
+            reader.readAsText(file);
 
             // Reset file input
             event.target.value = '';
@@ -1492,17 +1475,17 @@
         }
 
         // Close popover when clicking outside
-        document.addEventListener('click', async (event) => {
+        document.addEventListener('click', (event) => {
             if (selectedExcerptId && !event.target.closest('.sentence-item')) {
                 selectedExcerptId = null;
                 if (currentTranscript) {
-                    await renderSentenceList();
+                    renderSentenceList();
                 }
             }
         });
 
         // Keyboard shortcuts
-        document.addEventListener('keydown', async (event) => {
+        document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 if (document.getElementById('new-transcript-modal').classList.contains('active')) {
                     closeNewTranscriptModal();
@@ -1510,7 +1493,7 @@
                     closeConfirmModal();
                 } else if (selectedExcerptId) {
                     selectedExcerptId = null;
-                    await renderSentenceList();
+                    renderSentenceList();
                 }
             }
         });
