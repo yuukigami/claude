@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qualitative Research Coder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #0f0f1a;
+            --bg-card: #232342;
+            --bg-hover: #2a2a4a;
+            --bg-selected: #3d3d6b;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #6b6b7b;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --accent-muted: #4f46e5;
+            --border: #3d3d5c;
+            --border-light: #4d4d6c;
+            --tag-bg: #4338ca;
+            --tag-text: #e0e7ff;
+            --success: #10b981;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .nav-tab {
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-tab.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--text-primary);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-hover);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--border-light);
+            background: var(--bg-hover);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .card-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        /* Views */
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* Transcript List */
+        .transcript-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .transcript-list-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        /* Coding View */
+        .coding-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .coding-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .back-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .coding-title h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .coding-title .meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Sentence List */
+        .sentence-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sentence-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .sentence-item:hover {
+            border-color: var(--border-light);
+        }
+
+        .sentence-item.selected {
+            background: var(--bg-selected);
+            border-color: var(--accent);
+        }
+
+        .sentence-item.tagged {
+            border-left: 3px solid var(--accent);
+        }
+
+        .sentence-number {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            min-width: 24px;
+            padding-top: 2px;
+        }
+
+        .sentence-content {
+            flex: 1;
+        }
+
+        .sentence-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .sentence-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        /* Tags */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .tag-remove {
+            background: none;
+            border: none;
+            color: var(--tag-text);
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 0.9rem;
+            line-height: 1;
+            padding: 0;
+            margin-left: 2px;
+        }
+
+        .tag-remove:hover {
+            opacity: 1;
+        }
+
+        /* Tag Popover */
+        .tag-popover {
+            position: absolute;
+            top: 100%;
+            left: 40px;
+            width: 280px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            display: none;
+        }
+
+        .tag-popover.active {
+            display: block;
+        }
+
+        .tag-search {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-family: inherit;
+            margin-bottom: 12px;
+        }
+
+        .tag-search:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .tag-section {
+            margin-bottom: 12px;
+        }
+
+        .tag-section-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .tag-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .tag-option:hover {
+            background: var(--bg-hover);
+        }
+
+        .tag-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+        }
+
+        .tag-option-name {
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        .tag-option-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .tag-create-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--accent-muted);
+            border: none;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            font-family: inherit;
+        }
+
+        .tag-create-btn:hover {
+            background: var(--accent);
+        }
+
+        /* Database View */
+        .database-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .database-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .filter-group label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .filter-select {
+            padding: 10px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-family: inherit;
+            min-width: 200px;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .excerpt-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+        }
+
+        .excerpt-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .excerpt-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .excerpt-source {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .excerpt-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .results-count {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 16px;
+        }
+
+        /* Header Actions */
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            background: var(--success);
+            color: var(--text-primary);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 2000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+        }
+
+        .toast.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        /* Confirmation Modal */
+        .confirm-modal .modal {
+            max-width: 400px;
+        }
+
+        .confirm-modal p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="logo">Qual<span>Coder</span></div>
+            <div class="header-actions">
+                <button class="btn btn-secondary btn-small" onclick="exportData()">Export</button>
+                <button class="btn btn-secondary btn-small" onclick="importData()">Import</button>
+            </div>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-view="transcripts" onclick="switchView('transcripts')">Transcripts</button>
+            <button class="nav-tab" data-view="database" onclick="switchView('database')">Database</button>
+        </nav>
+
+        <!-- Transcripts View -->
+        <div id="transcripts-view" class="view active">
+            <div class="transcript-list-header">
+                <h2>My Transcripts</h2>
+                <button class="btn btn-primary" onclick="openNewTranscriptModal()">+ New Transcript</button>
+            </div>
+            <div id="transcript-list"></div>
+        </div>
+
+        <!-- Coding View -->
+        <div id="coding-view" class="view">
+            <div class="coding-header">
+                <div class="coding-header-left">
+                    <button class="back-btn" onclick="backToList()">←</button>
+                    <div class="coding-title">
+                        <h2 id="coding-transcript-title"></h2>
+                        <div class="meta" id="coding-transcript-meta"></div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary btn-small" onclick="exportTranscript()">Export This</button>
+            </div>
+            <div id="sentence-list" class="sentence-list"></div>
+        </div>
+
+        <!-- Database View -->
+        <div id="database-view" class="view">
+            <div class="database-header">
+                <h2>Database</h2>
+                <div class="filter-group">
+                    <label>Filter by tag:</label>
+                    <select id="tag-filter" class="filter-select" onchange="filterByTag()">
+                        <option value="">All excerpts</option>
+                    </select>
+                </div>
+            </div>
+            <div id="excerpts-list"></div>
+            <div id="results-count" class="results-count"></div>
+        </div>
+    </div>
+
+    <!-- New Transcript Modal -->
+    <div id="new-transcript-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>New Transcript</h2>
+                <button class="modal-close" onclick="closeNewTranscriptModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="transcript-title" class="form-input" placeholder="e.g., User 5 - Checkout Flow">
+            </div>
+            <div class="form-group">
+                <label>User Label</label>
+                <input type="text" id="transcript-user" class="form-input" placeholder="e.g., User 5">
+            </div>
+            <div class="form-group">
+                <label>Paste transcript text</label>
+                <textarea id="transcript-text" class="form-input form-textarea" placeholder="Paste the full transcript here..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeNewTranscriptModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createTranscript()">Import & Code</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div id="confirm-modal" class="modal-overlay confirm-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="confirm-title">Confirm Delete</h2>
+                <button class="modal-close" onclick="closeConfirmModal()">&times;</button>
+            </div>
+            <p id="confirm-message">Are you sure you want to delete this?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button class="btn btn-danger" id="confirm-action-btn" onclick="confirmAction()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="import-file" accept=".json" style="display: none" onchange="handleImportFile(event)">
+
+    <script>
+        // ==========================================
+        // DATABASE (IndexedDB)
+        // ==========================================
+
+        const DB_NAME = 'QualCoderDB';
+        const DB_VERSION = 1;
+        let db = null;
+
+        function openDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+
+                    // Transcripts store
+                    if (!database.objectStoreNames.contains('transcripts')) {
+                        const transcriptStore = database.createObjectStore('transcripts', { keyPath: 'id' });
+                        transcriptStore.createIndex('createdAt', 'createdAt', { unique: false });
+                    }
+
+                    // Excerpts store
+                    if (!database.objectStoreNames.contains('excerpts')) {
+                        const excerptStore = database.createObjectStore('excerpts', { keyPath: 'id' });
+                        excerptStore.createIndex('transcriptId', 'transcriptId', { unique: false });
+                    }
+
+                    // Tags store
+                    if (!database.objectStoreNames.contains('tags')) {
+                        const tagStore = database.createObjectStore('tags', { keyPath: 'id' });
+                        tagStore.createIndex('name', 'name', { unique: true });
+                        tagStore.createIndex('usageCount', 'usageCount', { unique: false });
+                    }
+                };
+            });
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // Generic CRUD operations
+        function dbAdd(storeName, data) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(storeName, 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.add(data);
+                request.onsuccess = () => resolve(data);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function dbPut(storeName, data) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(storeName, 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.put(data);
+                request.onsuccess = () => resolve(data);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function dbGet(storeName, id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(storeName, 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.get(id);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function dbGetAll(storeName) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(storeName, 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function dbDelete(storeName, id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(storeName, 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.delete(id);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function dbGetByIndex(storeName, indexName, value) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(storeName, 'readonly');
+                const store = transaction.objectStore(storeName);
+                const index = store.index(indexName);
+                const request = index.getAll(value);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // ==========================================
+        // STATE
+        // ==========================================
+
+        let currentTranscript = null;
+        let selectedExcerptId = null;
+        let pendingConfirmAction = null;
+
+        // ==========================================
+        // SENTENCE PARSING
+        // ==========================================
+
+        function parseSentences(text) {
+            // Handle common abbreviations to avoid false splits
+            const abbreviations = ['Mr', 'Mrs', 'Ms', 'Dr', 'Prof', 'Sr', 'Jr', 'vs', 'etc', 'i.e', 'e.g'];
+            let processed = text;
+
+            // Temporarily replace abbreviations
+            abbreviations.forEach((abbr, i) => {
+                const regex = new RegExp(`\\b${abbr}\\.`, 'gi');
+                processed = processed.replace(regex, `__ABBR${i}__`);
+            });
+
+            // Split on sentence-ending punctuation followed by space or newline
+            const sentences = processed
+                .split(/(?<=[.!?])\s+/)
+                .map(s => s.trim())
+                .filter(s => s.length > 0);
+
+            // Restore abbreviations
+            return sentences.map(sentence => {
+                let restored = sentence;
+                abbreviations.forEach((abbr, i) => {
+                    restored = restored.replace(new RegExp(`__ABBR${i}__`, 'g'), `${abbr}.`);
+                });
+                return restored;
+            });
+        }
+
+        // ==========================================
+        // VIEW SWITCHING
+        // ==========================================
+
+        function switchView(viewName) {
+            // Update tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.view === viewName);
+            });
+
+            // Update views
+            document.querySelectorAll('.view').forEach(view => {
+                view.classList.remove('active');
+            });
+
+            if (viewName === 'transcripts') {
+                document.getElementById('transcripts-view').classList.add('active');
+                renderTranscriptList();
+            } else if (viewName === 'database') {
+                document.getElementById('database-view').classList.add('active');
+                renderDatabaseView();
+            } else if (viewName === 'coding') {
+                document.getElementById('coding-view').classList.add('active');
+            }
+        }
+
+        // ==========================================
+        // TRANSCRIPT LIST
+        // ==========================================
+
+        async function renderTranscriptList() {
+            const transcripts = await dbGetAll('transcripts');
+            const excerpts = await dbGetAll('excerpts');
+
+            // Sort by createdAt descending
+            transcripts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            const container = document.getElementById('transcript-list');
+
+            if (transcripts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No transcripts yet</h3>
+                        <p>Click "New Transcript" to import your first user testing transcript.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = transcripts.map(t => {
+                const transcriptExcerpts = excerpts.filter(e => e.transcriptId === t.id);
+                const taggedCount = transcriptExcerpts.filter(e => e.tagIds && e.tagIds.length > 0).length;
+                const totalCount = transcriptExcerpts.length;
+                const date = new Date(t.createdAt).toLocaleDateString();
+
+                return `
+                    <div class="card" onclick="openTranscript('${t.id}')">
+                        <div class="card-title">${escapeHtml(t.title)}</div>
+                        <div class="card-meta">
+                            ${escapeHtml(t.userLabel)} • ${taggedCount}/${totalCount} sentences tagged • Imported ${date}
+                        </div>
+                        <div class="card-actions" onclick="event.stopPropagation()">
+                            <button class="btn btn-secondary btn-small" onclick="deleteTranscript('${t.id}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==========================================
+        // NEW TRANSCRIPT MODAL
+        // ==========================================
+
+        function openNewTranscriptModal() {
+            document.getElementById('new-transcript-modal').classList.add('active');
+            document.getElementById('transcript-title').focus();
+        }
+
+        function closeNewTranscriptModal() {
+            document.getElementById('new-transcript-modal').classList.remove('active');
+            document.getElementById('transcript-title').value = '';
+            document.getElementById('transcript-user').value = '';
+            document.getElementById('transcript-text').value = '';
+        }
+
+        async function createTranscript() {
+            const title = document.getElementById('transcript-title').value.trim();
+            const userLabel = document.getElementById('transcript-user').value.trim();
+            const rawText = document.getElementById('transcript-text').value.trim();
+
+            if (!title) {
+                showToast('Please enter a title', 'error');
+                return;
+            }
+
+            if (!rawText) {
+                showToast('Please paste transcript text', 'error');
+                return;
+            }
+
+            const transcript = {
+                id: generateId(),
+                title,
+                userLabel: userLabel || 'Unknown User',
+                rawText,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            await dbAdd('transcripts', transcript);
+
+            // Parse sentences and create excerpts
+            const sentences = parseSentences(rawText);
+            for (let i = 0; i < sentences.length; i++) {
+                const excerpt = {
+                    id: generateId(),
+                    transcriptId: transcript.id,
+                    text: sentences[i],
+                    index: i,
+                    tagIds: [],
+                    createdAt: new Date().toISOString()
+                };
+                await dbAdd('excerpts', excerpt);
+            }
+
+            closeNewTranscriptModal();
+            showToast(`Imported ${sentences.length} sentences`);
+            openTranscript(transcript.id);
+        }
+
+        // ==========================================
+        // CODING VIEW
+        // ==========================================
+
+        async function openTranscript(transcriptId) {
+            currentTranscript = await dbGet('transcripts', transcriptId);
+
+            document.getElementById('coding-transcript-title').textContent = currentTranscript.title;
+            document.getElementById('coding-transcript-meta').textContent = currentTranscript.userLabel;
+
+            // Hide nav tabs, show coding view
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('coding-view').classList.add('active');
+
+            await renderSentenceList();
+        }
+
+        function backToList() {
+            currentTranscript = null;
+            selectedExcerptId = null;
+            switchView('transcripts');
+        }
+
+        async function renderSentenceList() {
+            const excerpts = await dbGetByIndex('excerpts', 'transcriptId', currentTranscript.id);
+            const tags = await dbGetAll('tags');
+
+            // Sort by index
+            excerpts.sort((a, b) => a.index - b.index);
+
+            const container = document.getElementById('sentence-list');
+
+            container.innerHTML = excerpts.map(excerpt => {
+                const excerptTags = tags.filter(t => excerpt.tagIds && excerpt.tagIds.includes(t.id));
+                const isSelected = selectedExcerptId === excerpt.id;
+                const isTagged = excerpt.tagIds && excerpt.tagIds.length > 0;
+
+                return `
+                    <div class="sentence-item ${isSelected ? 'selected' : ''} ${isTagged ? 'tagged' : ''}"
+                         data-excerpt-id="${excerpt.id}"
+                         onclick="selectExcerpt('${excerpt.id}', event)">
+                        <div class="sentence-number">${excerpt.index + 1}</div>
+                        <div class="sentence-content">
+                            <div class="sentence-text">${escapeHtml(excerpt.text)}</div>
+                            <div class="sentence-tags">
+                                ${excerptTags.map(tag => `
+                                    <span class="tag">
+                                        ${escapeHtml(tag.name)}
+                                        <button class="tag-remove" onclick="removeTagFromExcerpt('${excerpt.id}', '${tag.id}', event)">&times;</button>
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ${isSelected ? await renderTagPopover(excerpt) : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function selectExcerpt(excerptId, event) {
+            if (event.target.closest('.tag-popover') || event.target.closest('.tag-remove')) {
+                return;
+            }
+
+            if (selectedExcerptId === excerptId) {
+                selectedExcerptId = null;
+            } else {
+                selectedExcerptId = excerptId;
+            }
+
+            await renderSentenceList();
+
+            // Focus search input if popover is open
+            if (selectedExcerptId) {
+                const searchInput = document.getElementById('tag-search-input');
+                if (searchInput) {
+                    setTimeout(() => searchInput.focus(), 50);
+                }
+            }
+        }
+
+        async function renderTagPopover(excerpt) {
+            const tags = await dbGetAll('tags');
+
+            // Sort tags by usage count descending
+            tags.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
+
+            const recentTags = tags.slice(0, 5);
+            const allTags = tags;
+
+            return `
+                <div class="tag-popover active" onclick="event.stopPropagation()">
+                    <input type="text"
+                           class="tag-search"
+                           id="tag-search-input"
+                           placeholder="Search or create tag..."
+                           oninput="filterTagOptions(this.value)"
+                           onkeydown="handleTagSearchKeydown(event, '${excerpt.id}')">
+                    <div id="tag-options-container">
+                        ${renderTagOptions(tags, excerpt.tagIds || [], '')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTagOptions(tags, selectedTagIds, searchQuery) {
+            const query = searchQuery.toLowerCase().trim();
+            const filteredTags = query
+                ? tags.filter(t => t.name.toLowerCase().includes(query))
+                : tags;
+
+            const exactMatch = tags.some(t => t.name.toLowerCase() === query);
+
+            let html = '';
+
+            if (filteredTags.length > 0) {
+                html += `<div class="tag-section">
+                    <div class="tag-section-title">${query ? 'Matching Tags' : 'All Tags'}</div>
+                    ${filteredTags.map(tag => `
+                        <label class="tag-option" onclick="toggleTag('${tag.id}', event)">
+                            <input type="checkbox" ${selectedTagIds.includes(tag.id) ? 'checked' : ''}>
+                            <span class="tag-option-name">${escapeHtml(tag.name)}</span>
+                            <span class="tag-option-count">${tag.usageCount || 0}</span>
+                        </label>
+                    `).join('')}
+                </div>`;
+            }
+
+            if (query && !exactMatch) {
+                html += `<button class="tag-create-btn" onclick="createAndApplyTag('${escapeHtml(query)}')">
+                    + Create "${escapeHtml(query)}"
+                </button>`;
+            }
+
+            if (!query && tags.length === 0) {
+                html += `<div class="tag-section">
+                    <p style="color: var(--text-muted); font-size: 0.85rem; padding: 8px;">
+                        No tags yet. Type to create your first tag.
+                    </p>
+                </div>`;
+            }
+
+            return html;
+        }
+
+        async function filterTagOptions(query) {
+            const tags = await dbGetAll('tags');
+            tags.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
+
+            const excerpt = await dbGet('excerpts', selectedExcerptId);
+
+            const container = document.getElementById('tag-options-container');
+            container.innerHTML = renderTagOptions(tags, excerpt.tagIds || [], query);
+        }
+
+        async function handleTagSearchKeydown(event, excerptId) {
+            if (event.key === 'Enter') {
+                const query = event.target.value.trim().toLowerCase();
+                if (!query) return;
+
+                const tags = await dbGetAll('tags');
+                const exactMatch = tags.find(t => t.name.toLowerCase() === query);
+
+                if (exactMatch) {
+                    await toggleTag(exactMatch.id, event);
+                } else {
+                    await createAndApplyTag(query);
+                }
+            } else if (event.key === 'Escape') {
+                selectedExcerptId = null;
+                await renderSentenceList();
+            }
+        }
+
+        async function toggleTag(tagId, event) {
+            if (event) event.stopPropagation();
+
+            const excerpt = await dbGet('excerpts', selectedExcerptId);
+            const tag = await dbGet('tags', tagId);
+
+            if (!excerpt.tagIds) excerpt.tagIds = [];
+
+            const index = excerpt.tagIds.indexOf(tagId);
+            if (index === -1) {
+                // Add tag
+                excerpt.tagIds.push(tagId);
+                tag.usageCount = (tag.usageCount || 0) + 1;
+            } else {
+                // Remove tag
+                excerpt.tagIds.splice(index, 1);
+                tag.usageCount = Math.max(0, (tag.usageCount || 1) - 1);
+            }
+
+            await dbPut('excerpts', excerpt);
+            await dbPut('tags', tag);
+            await renderSentenceList();
+
+            // Refocus search input
+            setTimeout(() => {
+                const searchInput = document.getElementById('tag-search-input');
+                if (searchInput) searchInput.focus();
+            }, 50);
+        }
+
+        async function createAndApplyTag(name) {
+            const normalizedName = name.toLowerCase().trim();
+
+            // Check if tag already exists
+            const tags = await dbGetAll('tags');
+            let tag = tags.find(t => t.name.toLowerCase() === normalizedName);
+
+            if (!tag) {
+                tag = {
+                    id: generateId(),
+                    name: normalizedName,
+                    usageCount: 0,
+                    createdAt: new Date().toISOString()
+                };
+                await dbAdd('tags', tag);
+            }
+
+            // Apply to current excerpt
+            const excerpt = await dbGet('excerpts', selectedExcerptId);
+            if (!excerpt.tagIds) excerpt.tagIds = [];
+
+            if (!excerpt.tagIds.includes(tag.id)) {
+                excerpt.tagIds.push(tag.id);
+                tag.usageCount = (tag.usageCount || 0) + 1;
+                await dbPut('excerpts', excerpt);
+                await dbPut('tags', tag);
+            }
+
+            await renderSentenceList();
+            showToast(`Created and applied tag "${normalizedName}"`);
+        }
+
+        async function removeTagFromExcerpt(excerptId, tagId, event) {
+            event.stopPropagation();
+
+            const excerpt = await dbGet('excerpts', excerptId);
+            const tag = await dbGet('tags', tagId);
+
+            excerpt.tagIds = excerpt.tagIds.filter(id => id !== tagId);
+            tag.usageCount = Math.max(0, (tag.usageCount || 1) - 1);
+
+            await dbPut('excerpts', excerpt);
+            await dbPut('tags', tag);
+            await renderSentenceList();
+        }
+
+        // ==========================================
+        // DATABASE VIEW
+        // ==========================================
+
+        async function renderDatabaseView() {
+            const tags = await dbGetAll('tags');
+            tags.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
+
+            // Update filter dropdown
+            const filterSelect = document.getElementById('tag-filter');
+            filterSelect.innerHTML = `
+                <option value="">All tagged excerpts</option>
+                ${tags.map(t => `<option value="${t.id}">${escapeHtml(t.name)} (${t.usageCount || 0})</option>`).join('')}
+            `;
+
+            await filterByTag();
+        }
+
+        async function filterByTag() {
+            const selectedTagId = document.getElementById('tag-filter').value;
+
+            const excerpts = await dbGetAll('excerpts');
+            const transcripts = await dbGetAll('transcripts');
+            const tags = await dbGetAll('tags');
+
+            // Filter excerpts that have at least one tag
+            let filtered = excerpts.filter(e => e.tagIds && e.tagIds.length > 0);
+
+            // Further filter by selected tag
+            if (selectedTagId) {
+                filtered = filtered.filter(e => e.tagIds.includes(selectedTagId));
+            }
+
+            // Sort by transcript, then by index
+            filtered.sort((a, b) => {
+                if (a.transcriptId !== b.transcriptId) {
+                    return a.transcriptId.localeCompare(b.transcriptId);
+                }
+                return a.index - b.index;
+            });
+
+            const container = document.getElementById('excerpts-list');
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No tagged excerpts</h3>
+                        <p>Start coding your transcripts to see excerpts here.</p>
+                    </div>
+                `;
+                document.getElementById('results-count').textContent = '';
+                return;
+            }
+
+            container.innerHTML = filtered.map(excerpt => {
+                const transcript = transcripts.find(t => t.id === excerpt.transcriptId);
+                const excerptTags = tags.filter(t => excerpt.tagIds.includes(t.id));
+
+                return `
+                    <div class="excerpt-card">
+                        <div class="excerpt-text">"${escapeHtml(excerpt.text)}"</div>
+                        <div class="excerpt-meta">
+                            <span class="excerpt-source">${escapeHtml(transcript?.title || 'Unknown')} • ${escapeHtml(transcript?.userLabel || '')}</span>
+                            <div class="excerpt-tags">
+                                ${excerptTags.map(t => `<span class="tag">${escapeHtml(t.name)}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const selectedTag = tags.find(t => t.id === selectedTagId);
+            document.getElementById('results-count').textContent =
+                `Showing ${filtered.length} excerpt${filtered.length !== 1 ? 's' : ''}${selectedTag ? ` with tag "${selectedTag.name}"` : ''}`;
+        }
+
+        // ==========================================
+        // DELETE TRANSCRIPT
+        // ==========================================
+
+        function deleteTranscript(transcriptId) {
+            pendingConfirmAction = async () => {
+                // Delete all excerpts for this transcript
+                const excerpts = await dbGetByIndex('excerpts', 'transcriptId', transcriptId);
+                for (const excerpt of excerpts) {
+                    // Update tag usage counts
+                    if (excerpt.tagIds) {
+                        for (const tagId of excerpt.tagIds) {
+                            const tag = await dbGet('tags', tagId);
+                            if (tag) {
+                                tag.usageCount = Math.max(0, (tag.usageCount || 1) - 1);
+                                await dbPut('tags', tag);
+                            }
+                        }
+                    }
+                    await dbDelete('excerpts', excerpt.id);
+                }
+
+                // Delete transcript
+                await dbDelete('transcripts', transcriptId);
+
+                showToast('Transcript deleted');
+                await renderTranscriptList();
+            };
+
+            document.getElementById('confirm-title').textContent = 'Delete Transcript';
+            document.getElementById('confirm-message').textContent = 'Are you sure you want to delete this transcript and all its coded excerpts? This cannot be undone.';
+            document.getElementById('confirm-modal').classList.add('active');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.remove('active');
+            pendingConfirmAction = null;
+        }
+
+        async function confirmAction() {
+            if (pendingConfirmAction) {
+                await pendingConfirmAction();
+            }
+            closeConfirmModal();
+        }
+
+        // ==========================================
+        // EXPORT / IMPORT
+        // ==========================================
+
+        async function exportData() {
+            const data = {
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                transcripts: await dbGetAll('transcripts'),
+                excerpts: await dbGetAll('excerpts'),
+                tags: await dbGetAll('tags')
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `qualcoder-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+            showToast('Data exported successfully');
+        }
+
+        async function exportTranscript() {
+            if (!currentTranscript) return;
+
+            const excerpts = await dbGetByIndex('excerpts', 'transcriptId', currentTranscript.id);
+            const tags = await dbGetAll('tags');
+
+            excerpts.sort((a, b) => a.index - b.index);
+
+            const data = {
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                transcript: currentTranscript,
+                excerpts: excerpts.map(e => ({
+                    ...e,
+                    tags: (e.tagIds || []).map(tagId => {
+                        const tag = tags.find(t => t.id === tagId);
+                        return tag ? tag.name : null;
+                    }).filter(Boolean)
+                }))
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentTranscript.title.replace(/[^a-z0-9]/gi, '-')}-coded.json`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+            showToast('Transcript exported');
+        }
+
+        function importData() {
+            document.getElementById('import-file').click();
+        }
+
+        async function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+
+                if (!data.version || !data.transcripts || !data.excerpts || !data.tags) {
+                    throw new Error('Invalid backup file format');
+                }
+
+                // Import tags first
+                for (const tag of data.tags) {
+                    try {
+                        await dbAdd('tags', tag);
+                    } catch (e) {
+                        // Tag might already exist, update it
+                        await dbPut('tags', tag);
+                    }
+                }
+
+                // Import transcripts
+                for (const transcript of data.transcripts) {
+                    try {
+                        await dbAdd('transcripts', transcript);
+                    } catch (e) {
+                        await dbPut('transcripts', transcript);
+                    }
+                }
+
+                // Import excerpts
+                for (const excerpt of data.excerpts) {
+                    try {
+                        await dbAdd('excerpts', excerpt);
+                    } catch (e) {
+                        await dbPut('excerpts', excerpt);
+                    }
+                }
+
+                showToast(`Imported ${data.transcripts.length} transcripts`);
+                await renderTranscriptList();
+
+            } catch (e) {
+                showToast('Failed to import: ' + e.message, 'error');
+            }
+
+            // Reset file input
+            event.target.value = '';
+        }
+
+        // ==========================================
+        // UTILITIES
+        // ==========================================
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast active' + (type === 'error' ? ' error' : '');
+
+            setTimeout(() => {
+                toast.classList.remove('active');
+            }, 3000);
+        }
+
+        // Close popover when clicking outside
+        document.addEventListener('click', async (event) => {
+            if (selectedExcerptId && !event.target.closest('.sentence-item')) {
+                selectedExcerptId = null;
+                if (currentTranscript) {
+                    await renderSentenceList();
+                }
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', async (event) => {
+            if (event.key === 'Escape') {
+                if (document.getElementById('new-transcript-modal').classList.contains('active')) {
+                    closeNewTranscriptModal();
+                } else if (document.getElementById('confirm-modal').classList.contains('active')) {
+                    closeConfirmModal();
+                } else if (selectedExcerptId) {
+                    selectedExcerptId = null;
+                    await renderSentenceList();
+                }
+            }
+        });
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+
+        async function init() {
+            try {
+                await openDatabase();
+                await renderTranscriptList();
+            } catch (e) {
+                console.error('Failed to initialize:', e);
+                showToast('Failed to initialize database', 'error');
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
