@@ -754,112 +754,71 @@
 
     <script>
         // ==========================================
-        // DATABASE (IndexedDB)
+        // DATABASE (localStorage)
         // ==========================================
 
-        const DB_NAME = 'QualCoderDB';
-        const DB_VERSION = 1;
-        let db = null;
+        const STORAGE_KEY = 'qualCoderData';
 
-        function openDatabase() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
+        // Data structure stored in localStorage
+        let data = {
+            transcripts: [],
+            excerpts: [],
+            tags: []
+        };
 
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => {
-                    db = request.result;
-                    resolve(db);
-                };
+        function loadData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    data = JSON.parse(stored);
+                } catch (e) {
+                    console.error('Failed to parse stored data:', e);
+                    data = { transcripts: [], excerpts: [], tags: [] };
+                }
+            }
+        }
 
-                request.onupgradeneeded = (event) => {
-                    const database = event.target.result;
-
-                    // Transcripts store
-                    if (!database.objectStoreNames.contains('transcripts')) {
-                        const transcriptStore = database.createObjectStore('transcripts', { keyPath: 'id' });
-                        transcriptStore.createIndex('createdAt', 'createdAt', { unique: false });
-                    }
-
-                    // Excerpts store
-                    if (!database.objectStoreNames.contains('excerpts')) {
-                        const excerptStore = database.createObjectStore('excerpts', { keyPath: 'id' });
-                        excerptStore.createIndex('transcriptId', 'transcriptId', { unique: false });
-                    }
-
-                    // Tags store
-                    if (!database.objectStoreNames.contains('tags')) {
-                        const tagStore = database.createObjectStore('tags', { keyPath: 'id' });
-                        tagStore.createIndex('name', 'name', { unique: true });
-                        tagStore.createIndex('usageCount', 'usageCount', { unique: false });
-                    }
-                };
-            });
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         }
 
         function generateId() {
             return Date.now().toString(36) + Math.random().toString(36).substr(2);
         }
 
-        // Generic CRUD operations
-        function dbAdd(storeName, data) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction(storeName, 'readwrite');
-                const store = transaction.objectStore(storeName);
-                const request = store.add(data);
-                request.onsuccess = () => resolve(data);
-                request.onerror = () => reject(request.error);
-            });
+        // CRUD operations (synchronous, but kept async-compatible for consistency)
+        async function dbAdd(storeName, item) {
+            data[storeName].push(item);
+            saveData();
+            return item;
         }
 
-        function dbPut(storeName, data) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction(storeName, 'readwrite');
-                const store = transaction.objectStore(storeName);
-                const request = store.put(data);
-                request.onsuccess = () => resolve(data);
-                request.onerror = () => reject(request.error);
-            });
+        async function dbPut(storeName, item) {
+            const index = data[storeName].findIndex(i => i.id === item.id);
+            if (index !== -1) {
+                data[storeName][index] = item;
+            } else {
+                data[storeName].push(item);
+            }
+            saveData();
+            return item;
         }
 
-        function dbGet(storeName, id) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction(storeName, 'readonly');
-                const store = transaction.objectStore(storeName);
-                const request = store.get(id);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
+        async function dbGet(storeName, id) {
+            return data[storeName].find(i => i.id === id);
         }
 
-        function dbGetAll(storeName) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction(storeName, 'readonly');
-                const store = transaction.objectStore(storeName);
-                const request = store.getAll();
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
+        async function dbGetAll(storeName) {
+            return [...data[storeName]];
         }
 
-        function dbDelete(storeName, id) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction(storeName, 'readwrite');
-                const store = transaction.objectStore(storeName);
-                const request = store.delete(id);
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
+        async function dbDelete(storeName, id) {
+            data[storeName] = data[storeName].filter(i => i.id !== id);
+            saveData();
         }
 
-        function dbGetByIndex(storeName, indexName, value) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction(storeName, 'readonly');
-                const store = transaction.objectStore(storeName);
-                const index = store.index(indexName);
-                const request = index.getAll(value);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
+        async function dbGetByIndex(storeName, indexName, value) {
+            return data[storeName].filter(i => i[indexName] === value);
         }
 
         // ==========================================
@@ -1408,16 +1367,16 @@
         // EXPORT / IMPORT
         // ==========================================
 
-        async function exportData() {
-            const data = {
+        function exportData() {
+            const exportPayload = {
                 version: 1,
                 exportedAt: new Date().toISOString(),
-                transcripts: await dbGetAll('transcripts'),
-                excerpts: await dbGetAll('excerpts'),
-                tags: await dbGetAll('tags')
+                transcripts: data.transcripts,
+                excerpts: data.excerpts,
+                tags: data.tags
             };
 
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
 
             const a = document.createElement('a');
@@ -1429,28 +1388,27 @@
             showToast('Data exported successfully');
         }
 
-        async function exportTranscript() {
+        function exportTranscript() {
             if (!currentTranscript) return;
 
-            const excerpts = await dbGetByIndex('excerpts', 'transcriptId', currentTranscript.id);
-            const tags = await dbGetAll('tags');
+            const transcriptExcerpts = data.excerpts
+                .filter(e => e.transcriptId === currentTranscript.id)
+                .sort((a, b) => a.index - b.index);
 
-            excerpts.sort((a, b) => a.index - b.index);
-
-            const data = {
+            const exportPayload = {
                 version: 1,
                 exportedAt: new Date().toISOString(),
                 transcript: currentTranscript,
-                excerpts: excerpts.map(e => ({
+                excerpts: transcriptExcerpts.map(e => ({
                     ...e,
                     tags: (e.tagIds || []).map(tagId => {
-                        const tag = tags.find(t => t.id === tagId);
+                        const tag = data.tags.find(t => t.id === tagId);
                         return tag ? tag.name : null;
                     }).filter(Boolean)
                 }))
             };
 
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
 
             const a = document.createElement('a');
@@ -1472,41 +1430,36 @@
 
             try {
                 const text = await file.text();
-                const data = JSON.parse(text);
+                const importedData = JSON.parse(text);
 
-                if (!data.version || !data.transcripts || !data.excerpts || !data.tags) {
+                if (!importedData.version || !importedData.transcripts || !importedData.excerpts || !importedData.tags) {
                     throw new Error('Invalid backup file format');
                 }
 
-                // Import tags first
-                for (const tag of data.tags) {
-                    try {
-                        await dbAdd('tags', tag);
-                    } catch (e) {
-                        // Tag might already exist, update it
-                        await dbPut('tags', tag);
+                // Merge imported data with existing data
+                for (const tag of importedData.tags) {
+                    const existing = data.tags.find(t => t.id === tag.id);
+                    if (!existing) {
+                        data.tags.push(tag);
                     }
                 }
 
-                // Import transcripts
-                for (const transcript of data.transcripts) {
-                    try {
-                        await dbAdd('transcripts', transcript);
-                    } catch (e) {
-                        await dbPut('transcripts', transcript);
+                for (const transcript of importedData.transcripts) {
+                    const existing = data.transcripts.find(t => t.id === transcript.id);
+                    if (!existing) {
+                        data.transcripts.push(transcript);
                     }
                 }
 
-                // Import excerpts
-                for (const excerpt of data.excerpts) {
-                    try {
-                        await dbAdd('excerpts', excerpt);
-                    } catch (e) {
-                        await dbPut('excerpts', excerpt);
+                for (const excerpt of importedData.excerpts) {
+                    const existing = data.excerpts.find(e => e.id === excerpt.id);
+                    if (!existing) {
+                        data.excerpts.push(excerpt);
                     }
                 }
 
-                showToast(`Imported ${data.transcripts.length} transcripts`);
+                saveData();
+                showToast(`Imported ${importedData.transcripts.length} transcripts`);
                 await renderTranscriptList();
 
             } catch (e) {
@@ -1566,14 +1519,9 @@
         // INITIALIZATION
         // ==========================================
 
-        async function init() {
-            try {
-                await openDatabase();
-                await renderTranscriptList();
-            } catch (e) {
-                console.error('Failed to initialize:', e);
-                showToast('Failed to initialize database', 'error');
-            }
+        function init() {
+            loadData();
+            renderTranscriptList();
         }
 
         init();
