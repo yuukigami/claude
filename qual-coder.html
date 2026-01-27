@@ -648,6 +648,108 @@
             color: var(--text-secondary);
             margin-bottom: 20px;
         }
+
+        /* Tags Management View */
+        .tags-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .tags-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .tag-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+        }
+
+        .tag-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .tag-card-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .tag-card-count {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .tag-card-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .tag-card-description.empty {
+            color: var(--text-muted);
+            font-style: normal;
+        }
+
+        .tag-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tag-description-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+            margin-bottom: 8px;
+        }
+
+        .tag-description-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Tag option with description preview */
+        .tag-option-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .tag-option-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-style: italic;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+
+        /* Export One-Pager Button */
+        .export-onepager-btn {
+            margin-left: auto;
+        }
     </style>
 </head>
 <body>
@@ -663,6 +765,7 @@
         <nav class="nav-tabs">
             <button class="nav-tab active" data-view="transcripts" onclick="switchView('transcripts')">Transcripts</button>
             <button class="nav-tab" data-view="database" onclick="switchView('database')">Database</button>
+            <button class="nav-tab" data-view="tags" onclick="switchView('tags')">Tags</button>
         </nav>
 
         <!-- Transcripts View -->
@@ -698,10 +801,19 @@
                     <select id="tag-filter" class="filter-select" onchange="filterByTag()">
                         <option value="">All excerpts</option>
                     </select>
+                    <button class="btn btn-primary btn-small export-onepager-btn" onclick="exportOnePager()" id="export-onepager-btn" style="display: none;">Export One-Pager</button>
                 </div>
             </div>
             <div id="excerpts-list"></div>
             <div id="results-count" class="results-count"></div>
+        </div>
+
+        <!-- Tags View -->
+        <div id="tags-view" class="view">
+            <div class="tags-header">
+                <h2>Tags</h2>
+            </div>
+            <div id="tags-list"></div>
         </div>
     </div>
 
@@ -771,10 +883,29 @@
             if (stored) {
                 try {
                     data = JSON.parse(stored);
+                    migrateData();
                 } catch (e) {
                     console.error('Failed to parse stored data:', e);
                     data = { transcripts: [], excerpts: [], tags: [] };
                 }
+            }
+        }
+
+        // Migration: Add description field to existing tags
+        function migrateData() {
+            let needsSave = false;
+
+            // Add description to tags that don't have it
+            for (const tag of data.tags) {
+                if (tag.description === undefined) {
+                    tag.description = '';
+                    tag.updatedAt = tag.createdAt || new Date().toISOString();
+                    needsSave = true;
+                }
+            }
+
+            if (needsSave) {
+                saveData();
             }
         }
 
@@ -881,6 +1012,9 @@
             } else if (viewName === 'database') {
                 document.getElementById('database-view').classList.add('active');
                 renderDatabaseView();
+            } else if (viewName === 'tags') {
+                document.getElementById('tags-view').classList.add('active');
+                renderTagsView();
             } else if (viewName === 'coding') {
                 document.getElementById('coding-view').classList.add('active');
             }
@@ -1102,7 +1236,10 @@
                     ${filteredTags.map(tag => `
                         <label class="tag-option" onclick="toggleTag('${tag.id}', event)">
                             <input type="checkbox" ${selectedTagIds.includes(tag.id) ? 'checked' : ''}>
-                            <span class="tag-option-name">${escapeHtml(tag.name)}</span>
+                            <div class="tag-option-wrapper">
+                                <span class="tag-option-name">${escapeHtml(tag.name)}</span>
+                                ${tag.description ? `<span class="tag-option-desc">${escapeHtml(tag.description)}</span>` : ''}
+                            </div>
                             <span class="tag-option-count">${tag.usageCount || 0}</span>
                         </label>
                     `).join('')}
@@ -1191,8 +1328,10 @@
                 tag = {
                     id: generateId(),
                     name: normalizedName,
+                    description: '',
                     usageCount: 0,
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
                 };
                 data.tags.push(tag);
             }
@@ -1293,6 +1432,285 @@
             const selectedTag = data.tags.find(t => t.id === selectedTagId);
             document.getElementById('results-count').textContent =
                 `Showing ${filtered.length} excerpt${filtered.length !== 1 ? 's' : ''}${selectedTag ? ` with tag "${selectedTag.name}"` : ''}`;
+
+            // Show/hide export one-pager button
+            const exportBtn = document.getElementById('export-onepager-btn');
+            if (selectedTagId && filtered.length > 0) {
+                exportBtn.style.display = 'block';
+            } else {
+                exportBtn.style.display = 'none';
+            }
+        }
+
+        // ==========================================
+        // TAGS VIEW
+        // ==========================================
+
+        let editingTagId = null;
+
+        function renderTagsView() {
+            const tags = [...data.tags].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
+
+            const container = document.getElementById('tags-list');
+
+            if (tags.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No tags yet</h3>
+                        <p>Tags will appear here after you create them while coding transcripts.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = tags.map(tag => {
+                const isEditing = editingTagId === tag.id;
+
+                return `
+                    <div class="tag-card" data-tag-id="${tag.id}">
+                        <div class="tag-card-header">
+                            <span class="tag-card-name">${escapeHtml(tag.name)}</span>
+                            <span class="tag-card-count">${tag.usageCount || 0} uses</span>
+                        </div>
+                        ${isEditing ? `
+                            <textarea class="tag-description-input"
+                                      id="tag-desc-input-${tag.id}"
+                                      placeholder="Describe this theme (2-4 sentences)..."
+                                      onkeydown="handleDescriptionKeydown(event, '${tag.id}')">${escapeHtml(tag.description || '')}</textarea>
+                            <div class="tag-card-actions">
+                                <button class="btn btn-primary btn-small" onclick="saveTagDescription('${tag.id}')">Save</button>
+                                <button class="btn btn-secondary btn-small" onclick="cancelEditDescription()">Cancel</button>
+                            </div>
+                        ` : `
+                            <div class="tag-card-description ${tag.description ? '' : 'empty'}">
+                                ${tag.description ? escapeHtml(tag.description) : 'No description yet. Click "Edit Description" to add one.'}
+                            </div>
+                            <div class="tag-card-actions">
+                                <button class="btn btn-secondary btn-small" onclick="editTagDescription('${tag.id}')">${tag.description ? 'Edit' : 'Add'} Description</button>
+                                <button class="btn btn-secondary btn-small" onclick="exportOnePagerForTag('${tag.id}')">Export One-Pager</button>
+                                ${(tag.usageCount || 0) === 0 ? `<button class="btn btn-danger btn-small" onclick="deleteTag('${tag.id}')">Delete</button>` : ''}
+                            </div>
+                        `}
+                    </div>
+                `;
+            }).join('');
+
+            // Focus textarea if editing
+            if (editingTagId) {
+                const input = document.getElementById(`tag-desc-input-${editingTagId}`);
+                if (input) {
+                    setTimeout(() => input.focus(), 50);
+                }
+            }
+        }
+
+        function editTagDescription(tagId) {
+            editingTagId = tagId;
+            renderTagsView();
+        }
+
+        function cancelEditDescription() {
+            editingTagId = null;
+            renderTagsView();
+        }
+
+        function saveTagDescription(tagId) {
+            const input = document.getElementById(`tag-desc-input-${tagId}`);
+            if (!input) return;
+
+            const tag = data.tags.find(t => t.id === tagId);
+            if (!tag) return;
+
+            tag.description = input.value.trim();
+            tag.updatedAt = new Date().toISOString();
+
+            saveData();
+            editingTagId = null;
+            renderTagsView();
+            showToast('Description saved');
+        }
+
+        function handleDescriptionKeydown(event, tagId) {
+            if (event.key === 'Escape') {
+                cancelEditDescription();
+            } else if (event.key === 'Enter' && event.ctrlKey) {
+                saveTagDescription(tagId);
+            }
+        }
+
+        function deleteTag(tagId) {
+            const tag = data.tags.find(t => t.id === tagId);
+            if (!tag) return;
+
+            pendingConfirmAction = () => {
+                data.tags = data.tags.filter(t => t.id !== tagId);
+                saveData();
+                showToast(`Tag "${tag.name}" deleted`);
+                renderTagsView();
+            };
+
+            document.getElementById('confirm-title').textContent = 'Delete Tag';
+            document.getElementById('confirm-message').textContent = `Are you sure you want to delete the tag "${tag.name}"?`;
+            document.getElementById('confirm-modal').classList.add('active');
+        }
+
+        // ==========================================
+        // EXPORT ONE-PAGER
+        // ==========================================
+
+        function exportOnePager() {
+            const selectedTagId = document.getElementById('tag-filter').value;
+            if (!selectedTagId) return;
+            exportOnePagerForTag(selectedTagId);
+        }
+
+        function exportOnePagerForTag(tagId) {
+            const tag = data.tags.find(t => t.id === tagId);
+            if (!tag) return;
+
+            const excerpts = data.excerpts.filter(e => e.tagIds && e.tagIds.includes(tagId));
+            const transcriptIds = [...new Set(excerpts.map(e => e.transcriptId))];
+
+            // Group excerpts by transcript
+            const groupedExcerpts = excerpts.map(excerpt => {
+                const transcript = data.transcripts.find(t => t.id === excerpt.transcriptId);
+                return {
+                    ...excerpt,
+                    transcriptTitle: transcript?.title || 'Unknown',
+                    userLabel: transcript?.userLabel || 'Unknown'
+                };
+            }).sort((a, b) => {
+                if (a.transcriptId !== b.transcriptId) {
+                    return a.transcriptId.localeCompare(b.transcriptId);
+                }
+                return a.index - b.index;
+            });
+
+            const participantCount = transcriptIds.length;
+            const excerptCount = excerpts.length;
+
+            const html = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Theme Report: ${escapeHtml(tag.name)}</title>
+    <style>
+        @page { margin: 1in; size: letter; }
+        body {
+            font-family: 'Georgia', serif;
+            max-width: 7in;
+            margin: 0 auto;
+            padding: 40px;
+            color: #1a1a2e;
+            line-height: 1.6;
+        }
+        .report-header {
+            border-bottom: 3px solid #6366f1;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .theme-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a1a2e;
+            margin: 0 0 10px 0;
+        }
+        .description {
+            font-size: 16px;
+            font-style: italic;
+            color: #4a5568;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f7fafc;
+            border-left: 4px solid #6366f1;
+        }
+        .summary {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 30px;
+        }
+        .excerpt-card {
+            margin: 20px 0;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            page-break-inside: avoid;
+        }
+        .participant-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        .excerpt-text {
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .excerpt-source {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px;
+            color: #a0aec0;
+            text-align: center;
+        }
+        @media print {
+            body { padding: 0; }
+            .excerpt-card { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-header">
+        <h1 class="theme-name">${escapeHtml(tag.name)}</h1>
+    </div>
+
+    ${tag.description ? `<div class="description">${escapeHtml(tag.description)}</div>` : ''}
+
+    <div class="summary">
+        <strong>${excerptCount} excerpt${excerptCount !== 1 ? 's' : ''}</strong> from
+        <strong>${participantCount} participant${participantCount !== 1 ? 's' : ''}</strong>
+    </div>
+
+    <div class="excerpts">
+        ${groupedExcerpts.map(excerpt => `
+            <div class="excerpt-card">
+                <span class="participant-badge">${escapeHtml(excerpt.userLabel)}</span>
+                <p class="excerpt-text">"${escapeHtml(excerpt.text)}"</p>
+                <div class="excerpt-source">
+                    Source: ${escapeHtml(excerpt.transcriptTitle)} (Sentence #${excerpt.index + 1})
+                </div>
+            </div>
+        `).join('')}
+    </div>
+
+    <div class="footer">
+        Generated by QualCoder | ${new Date().toLocaleDateString()}
+    </div>
+</body>
+</html>`;
+
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${tag.name.replace(/[^a-z0-9]/gi, '-')}-one-pager.html`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+            showToast('One-pager exported');
         }
 
         // ==========================================
