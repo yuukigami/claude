@@ -648,6 +648,317 @@
             color: var(--text-secondary);
             margin-bottom: 20px;
         }
+
+        /* Tags Management View */
+        .tags-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .tags-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .tag-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+        }
+
+        .tag-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .tag-card-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .tag-card-count {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .tag-card-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .tag-card-description.empty {
+            color: var(--text-muted);
+            font-style: normal;
+        }
+
+        .tag-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tag-description-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+            margin-bottom: 8px;
+        }
+
+        .tag-description-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Tag option with description preview */
+        .tag-option-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .tag-option-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-style: italic;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+
+        /* Export One-Pager Button */
+        .export-onepager-btn {
+            margin-left: auto;
+        }
+
+        /* Export Options Dialog */
+        .export-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .export-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .export-option:hover {
+            background: var(--bg-hover);
+        }
+
+        .export-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        .export-option span {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        /* Speaker Type Styles */
+        .sentence-item[data-speaker="task"] {
+            background: rgba(245, 158, 11, 0.15);
+            border-left: 4px solid #f59e0b;
+        }
+
+        .sentence-item[data-speaker="task"]:hover {
+            background: rgba(245, 158, 11, 0.25);
+        }
+
+        .sentence-item[data-speaker="question"] {
+            background: rgba(59, 130, 246, 0.15);
+            border-left: 4px solid #3b82f6;
+        }
+
+        .sentence-item[data-speaker="question"]:hover {
+            background: rgba(59, 130, 246, 0.25);
+        }
+
+        .sentence-item[data-speaker="participant"] {
+            border-left: 4px solid #10b981;
+        }
+
+        .sentence-item[data-speaker="moderator"] {
+            background: rgba(139, 92, 246, 0.15);
+            border-left: 4px solid #8b5cf6;
+        }
+
+        .sentence-item[data-speaker="moderator"]:hover {
+            background: rgba(139, 92, 246, 0.25);
+        }
+
+        .speaker-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+        }
+
+        .speaker-badge--task {
+            background: rgba(245, 158, 11, 0.3);
+            color: #f59e0b;
+        }
+
+        .speaker-badge--question {
+            background: rgba(59, 130, 246, 0.3);
+            color: #3b82f6;
+        }
+
+        .speaker-badge--participant {
+            background: rgba(16, 185, 129, 0.3);
+            color: #10b981;
+        }
+
+        .speaker-badge--moderator {
+            background: rgba(139, 92, 246, 0.3);
+            color: #8b5cf6;
+        }
+
+        .sentence-item.non-taggable {
+            opacity: 0.7;
+            cursor: default;
+        }
+
+        .sentence-item.non-taggable:hover {
+            border-color: var(--border);
+        }
+
+        /* Multi-select for merging */
+        .sentence-item.multi-selected {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--accent);
+        }
+
+        .sentence-item .select-checkbox {
+            position: absolute;
+            top: 12px;
+            left: -28px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .sentence-list.merge-mode .sentence-item .select-checkbox {
+            opacity: 1;
+        }
+
+        .sentence-item:hover .select-checkbox {
+            opacity: 0.7;
+        }
+
+        .sentence-item.multi-selected .select-checkbox {
+            opacity: 1;
+        }
+
+        /* Merge toolbar */
+        .merge-toolbar {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .merge-toolbar.active {
+            display: flex;
+        }
+
+        .merge-toolbar-text {
+            flex: 1;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .merge-toolbar-text strong {
+            color: var(--text-primary);
+        }
+
+        /* Parse Format Selector */
+        .parse-format-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .parse-format-option {
+            flex: 1;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .parse-format-option:hover {
+            border-color: var(--border-light);
+        }
+
+        .parse-format-option.selected {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .parse-format-option input {
+            display: none;
+        }
+
+        .parse-format-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .parse-format-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
@@ -663,6 +974,7 @@
         <nav class="nav-tabs">
             <button class="nav-tab active" data-view="transcripts" onclick="switchView('transcripts')">Transcripts</button>
             <button class="nav-tab" data-view="database" onclick="switchView('database')">Database</button>
+            <button class="nav-tab" data-view="tags" onclick="switchView('tags')">Tags</button>
         </nav>
 
         <!-- Transcripts View -->
@@ -684,7 +996,15 @@
                         <div class="meta" id="coding-transcript-meta"></div>
                     </div>
                 </div>
-                <button class="btn btn-secondary btn-small" onclick="exportTranscript()">Export This</button>
+                <div class="header-actions">
+                    <button class="btn btn-secondary btn-small" id="merge-mode-btn" onclick="toggleMergeMode()">Merge Mode</button>
+                    <button class="btn btn-secondary btn-small" onclick="exportTranscript()">Export This</button>
+                </div>
+            </div>
+            <div id="merge-toolbar" class="merge-toolbar">
+                <span class="merge-toolbar-text"><strong id="merge-count">0</strong> sentences selected</span>
+                <button class="btn btn-secondary btn-small" onclick="clearMergeSelection()">Clear</button>
+                <button class="btn btn-primary btn-small" onclick="mergeSelectedSentences()">Merge Selected</button>
             </div>
             <div id="sentence-list" class="sentence-list"></div>
         </div>
@@ -698,10 +1018,19 @@
                     <select id="tag-filter" class="filter-select" onchange="filterByTag()">
                         <option value="">All excerpts</option>
                     </select>
+                    <button class="btn btn-primary btn-small export-onepager-btn" onclick="exportOnePager()" id="export-onepager-btn" style="display: none;">Export One-Pager</button>
                 </div>
             </div>
             <div id="excerpts-list"></div>
             <div id="results-count" class="results-count"></div>
+        </div>
+
+        <!-- Tags View -->
+        <div id="tags-view" class="view">
+            <div class="tags-header">
+                <h2>Tags</h2>
+            </div>
+            <div id="tags-list"></div>
         </div>
     </div>
 
@@ -719,6 +1048,21 @@
             <div class="form-group">
                 <label>User Label</label>
                 <input type="text" id="transcript-user" class="form-input" placeholder="e.g., User 5">
+            </div>
+            <div class="form-group">
+                <label>Parse Format</label>
+                <div class="parse-format-group">
+                    <label class="parse-format-option selected" onclick="selectParseFormat('auto')">
+                        <input type="radio" name="parse-format" value="auto" checked>
+                        <span class="parse-format-label">Auto-Detect</span>
+                        <span class="parse-format-desc">Detect speakers automatically</span>
+                    </label>
+                    <label class="parse-format-option" onclick="selectParseFormat('raw')">
+                        <input type="radio" name="parse-format" value="raw">
+                        <span class="parse-format-label">Raw</span>
+                        <span class="parse-format-desc">Split by sentence only</span>
+                    </label>
+                </div>
             </div>
             <div class="form-group">
                 <label>Paste transcript text</label>
@@ -752,6 +1096,41 @@
     <!-- Hidden file input for import -->
     <input type="file" id="import-file" accept=".json" style="display: none" onchange="handleImportFile(event)">
 
+    <!-- Export One-Pager Options Modal -->
+    <div id="export-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="export-modal-title">Export One-Pager</h2>
+                <button class="modal-close" onclick="closeExportModal()">&times;</button>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                Choose what to include in your exported report.
+            </p>
+            <div class="export-options">
+                <label class="export-option">
+                    <input type="checkbox" id="export-opt-description" checked>
+                    <span>Include tag description</span>
+                </label>
+                <label class="export-option">
+                    <input type="checkbox" id="export-opt-participant" checked>
+                    <span>Show participant labels</span>
+                </label>
+                <label class="export-option">
+                    <input type="checkbox" id="export-opt-summary" checked>
+                    <span>Include excerpt count summary</span>
+                </label>
+                <label class="export-option">
+                    <input type="checkbox" id="export-opt-source" checked>
+                    <span>Show source transcript info</span>
+                </label>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeExportModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="executeExport()">Export</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==========================================
         // DATABASE (localStorage)
@@ -771,10 +1150,47 @@
             if (stored) {
                 try {
                     data = JSON.parse(stored);
+                    migrateData();
                 } catch (e) {
                     console.error('Failed to parse stored data:', e);
                     data = { transcripts: [], excerpts: [], tags: [] };
                 }
+            }
+        }
+
+        // Migration: Add new fields to existing data
+        function migrateData() {
+            let needsSave = false;
+
+            // Add description to tags that don't have it
+            for (const tag of data.tags) {
+                if (tag.description === undefined) {
+                    tag.description = '';
+                    tag.updatedAt = tag.createdAt || new Date().toISOString();
+                    needsSave = true;
+                }
+            }
+
+            // Add speaker fields to excerpts that don't have them
+            for (const excerpt of data.excerpts) {
+                if (excerpt.speakerType === undefined) {
+                    excerpt.speakerType = 'unknown';
+                    excerpt.speakerLabel = '';
+                    excerpt.isTaggable = true;
+                    needsSave = true;
+                }
+            }
+
+            // Add parseFormat to transcripts that don't have it
+            for (const transcript of data.transcripts) {
+                if (transcript.parseFormat === undefined) {
+                    transcript.parseFormat = 'raw';
+                    needsSave = true;
+                }
+            }
+
+            if (needsSave) {
+                saveData();
             }
         }
 
@@ -828,6 +1244,8 @@
         let currentTranscript = null;
         let selectedExcerptId = null;
         let pendingConfirmAction = null;
+        let mergeMode = false;
+        let selectedForMerge = new Set();
 
         // ==========================================
         // SENTENCE PARSING
@@ -861,6 +1279,152 @@
         }
 
         // ==========================================
+        // SPEAKER DETECTION
+        // ==========================================
+
+        const SPEAKER_PATTERNS = {
+            task: [
+                /^Task\s*\d*[:\s]/i,
+                /^\[Task\s*\d*\]/i,
+                /^TASK\s*\d*[:\s]/
+            ],
+            question: [
+                /^(Question|Q)\s*\d*[:\s]/i,
+                /^\[Q\d*\]/i,
+                /^Interviewer[:\s]/i
+            ],
+            moderator: [
+                /^(Moderator|M)[:\s]/i,
+                /^Facilitator[:\s]/i,
+                /^Researcher[:\s]/i
+            ],
+            participant: [
+                /^(Participant|P|User|U)\s*\d*[:\s]/i,
+                /^(Respondent|R)\s*\d*[:\s]/i,
+                /^Tester\s*\d*[:\s]/i
+            ]
+        };
+
+        function detectSpeaker(line) {
+            const trimmed = line.trim();
+            if (!trimmed) return null;
+
+            for (const [speakerType, patterns] of Object.entries(SPEAKER_PATTERNS)) {
+                for (const pattern of patterns) {
+                    const match = trimmed.match(pattern);
+                    if (match) {
+                        const label = match[0].replace(/[:\s]+$/, '').trim();
+                        const text = trimmed.slice(match[0].length).trim();
+                        return {
+                            speakerType,
+                            speakerLabel: normalizeLabel(label, speakerType),
+                            text: text || trimmed,
+                            isTaggable: speakerType === 'participant'
+                        };
+                    }
+                }
+            }
+
+            return {
+                speakerType: 'unknown',
+                speakerLabel: '',
+                text: trimmed,
+                isTaggable: true
+            };
+        }
+
+        function normalizeLabel(label, speakerType) {
+            // Normalize labels to consistent format
+            const upper = label.toUpperCase();
+
+            if (speakerType === 'task') {
+                const num = label.match(/\d+/);
+                return num ? `Task ${num[0]}` : 'Task';
+            }
+            if (speakerType === 'question') {
+                const num = label.match(/\d+/);
+                return num ? `Q${num[0]}` : 'Question';
+            }
+            if (speakerType === 'participant') {
+                const num = label.match(/\d+/);
+                return num ? `P${num[0]}` : 'Participant';
+            }
+            if (speakerType === 'moderator') {
+                return 'Moderator';
+            }
+            return label;
+        }
+
+        function parseTranscriptWithSpeakers(rawText) {
+            const lines = rawText.split(/\n+/).filter(line => line.trim());
+            const excerpts = [];
+            let currentSpeaker = null;
+            let currentText = [];
+
+            for (const line of lines) {
+                const detected = detectSpeaker(line);
+
+                if (detected.speakerType !== 'unknown' && detected.speakerLabel) {
+                    // New speaker detected - save previous block
+                    if (currentText.length > 0 && currentSpeaker) {
+                        const text = currentText.join(' ').trim();
+                        if (text) {
+                            const sentences = parseSentences(text);
+                            for (const sentence of sentences) {
+                                excerpts.push({
+                                    ...currentSpeaker,
+                                    text: sentence
+                                });
+                            }
+                        }
+                    }
+
+                    currentSpeaker = {
+                        speakerType: detected.speakerType,
+                        speakerLabel: detected.speakerLabel,
+                        isTaggable: detected.isTaggable
+                    };
+                    currentText = detected.text ? [detected.text] : [];
+                } else {
+                    // Continue with current speaker or unknown
+                    if (!currentSpeaker) {
+                        currentSpeaker = {
+                            speakerType: 'unknown',
+                            speakerLabel: '',
+                            isTaggable: true
+                        };
+                    }
+                    currentText.push(detected.text);
+                }
+            }
+
+            // Don't forget the last block
+            if (currentText.length > 0 && currentSpeaker) {
+                const text = currentText.join(' ').trim();
+                if (text) {
+                    const sentences = parseSentences(text);
+                    for (const sentence of sentences) {
+                        excerpts.push({
+                            ...currentSpeaker,
+                            text: sentence
+                        });
+                    }
+                }
+            }
+
+            return excerpts;
+        }
+
+        let selectedParseFormat = 'auto';
+
+        function selectParseFormat(format) {
+            selectedParseFormat = format;
+            document.querySelectorAll('.parse-format-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.querySelector('input').value === format);
+            });
+        }
+
+        // ==========================================
         // VIEW SWITCHING
         // ==========================================
 
@@ -881,6 +1445,9 @@
             } else if (viewName === 'database') {
                 document.getElementById('database-view').classList.add('active');
                 renderDatabaseView();
+            } else if (viewName === 'tags') {
+                document.getElementById('tags-view').classList.add('active');
+                renderTagsView();
             } else if (viewName === 'coding') {
                 document.getElementById('coding-view').classList.add('active');
             }
@@ -961,29 +1528,64 @@
                 title,
                 userLabel: userLabel || 'Unknown User',
                 rawText,
+                parseFormat: selectedParseFormat,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
 
             data.transcripts.push(transcript);
 
-            // Parse sentences and create excerpts
-            const sentences = parseSentences(rawText);
-            for (let i = 0; i < sentences.length; i++) {
-                const excerpt = {
-                    id: generateId(),
-                    transcriptId: transcript.id,
-                    text: sentences[i],
-                    index: i,
-                    tagIds: [],
-                    createdAt: new Date().toISOString()
-                };
-                data.excerpts.push(excerpt);
+            // Parse based on selected format
+            let excerptCount = 0;
+            if (selectedParseFormat === 'auto') {
+                // Use speaker detection
+                const parsedExcerpts = parseTranscriptWithSpeakers(rawText);
+                for (let i = 0; i < parsedExcerpts.length; i++) {
+                    const parsed = parsedExcerpts[i];
+                    const excerpt = {
+                        id: generateId(),
+                        transcriptId: transcript.id,
+                        text: parsed.text,
+                        index: i,
+                        tagIds: [],
+                        speakerType: parsed.speakerType,
+                        speakerLabel: parsed.speakerLabel,
+                        isTaggable: parsed.isTaggable,
+                        createdAt: new Date().toISOString()
+                    };
+                    data.excerpts.push(excerpt);
+                }
+                excerptCount = parsedExcerpts.length;
+            } else {
+                // Raw mode - just split by sentences
+                const sentences = parseSentences(rawText);
+                for (let i = 0; i < sentences.length; i++) {
+                    const excerpt = {
+                        id: generateId(),
+                        transcriptId: transcript.id,
+                        text: sentences[i],
+                        index: i,
+                        tagIds: [],
+                        speakerType: 'unknown',
+                        speakerLabel: '',
+                        isTaggable: true,
+                        createdAt: new Date().toISOString()
+                    };
+                    data.excerpts.push(excerpt);
+                }
+                excerptCount = sentences.length;
             }
 
             saveData();
             closeNewTranscriptModal();
-            showToast(`Imported ${sentences.length} sentences`);
+
+            // Reset parse format to default
+            selectedParseFormat = 'auto';
+            document.querySelectorAll('.parse-format-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.querySelector('input').value === 'auto');
+            });
+
+            showToast(`Imported ${excerptCount} sentences`);
             openTranscript(transcript.id);
         }
 
@@ -1008,6 +1610,8 @@
         function backToList() {
             currentTranscript = null;
             selectedExcerptId = null;
+            mergeMode = false;
+            selectedForMerge.clear();
             switchView('transcripts');
         }
 
@@ -1019,18 +1623,28 @@
 
             const container = document.getElementById('sentence-list');
 
+            // Toggle merge-mode class on container
+            container.classList.toggle('merge-mode', mergeMode);
+
             container.innerHTML = excerpts.map(excerpt => {
                 const excerptTags = tags.filter(t => excerpt.tagIds && excerpt.tagIds.includes(t.id));
                 const isSelected = selectedExcerptId === excerpt.id;
                 const isTagged = excerpt.tagIds && excerpt.tagIds.length > 0;
+                const speakerType = excerpt.speakerType || 'unknown';
+                const speakerLabel = excerpt.speakerLabel || '';
+                const isTaggable = excerpt.isTaggable !== false;
+                const isSelectedForMerge = selectedForMerge.has(excerpt.id);
 
                 return `
-                    <div class="sentence-item ${isSelected ? 'selected' : ''} ${isTagged ? 'tagged' : ''}"
+                    <div class="sentence-item ${isSelected ? 'selected' : ''} ${isTagged ? 'tagged' : ''} ${!isTaggable ? 'non-taggable' : ''} ${isSelectedForMerge ? 'multi-selected' : ''}"
                          data-excerpt-id="${excerpt.id}"
-                         onclick="selectExcerpt('${excerpt.id}', event)">
+                         data-speaker="${speakerType}"
+                         onclick="${mergeMode && isTaggable ? `toggleMergeSelect('${excerpt.id}', event)` : (isTaggable ? `selectExcerpt('${excerpt.id}', event)` : '')}">
+                        ${isTaggable ? `<input type="checkbox" class="select-checkbox" ${isSelectedForMerge ? 'checked' : ''} onclick="toggleMergeSelect('${excerpt.id}', event)">` : ''}
                         <div class="sentence-number">${excerpt.index + 1}</div>
                         <div class="sentence-content">
                             <div class="sentence-text">${escapeHtml(excerpt.text)}</div>
+                            ${isTaggable ? `
                             <div class="sentence-tags">
                                 ${excerptTags.map(tag => `
                                     <span class="tag">
@@ -1039,11 +1653,16 @@
                                     </span>
                                 `).join('')}
                             </div>
+                            ` : ''}
                         </div>
-                        ${isSelected ? renderTagPopover(excerpt) : ''}
+                        ${speakerLabel ? `<span class="speaker-badge speaker-badge--${speakerType}">${escapeHtml(speakerLabel)}</span>` : ''}
+                        ${isSelected && isTaggable && !mergeMode ? renderTagPopover(excerpt) : ''}
                     </div>
                 `;
             }).join('');
+
+            // Update merge toolbar
+            updateMergeToolbar();
         }
 
         function selectExcerpt(excerptId, event) {
@@ -1102,7 +1721,10 @@
                     ${filteredTags.map(tag => `
                         <label class="tag-option" onclick="toggleTag('${tag.id}', event)">
                             <input type="checkbox" ${selectedTagIds.includes(tag.id) ? 'checked' : ''}>
-                            <span class="tag-option-name">${escapeHtml(tag.name)}</span>
+                            <div class="tag-option-wrapper">
+                                <span class="tag-option-name">${escapeHtml(tag.name)}</span>
+                                ${tag.description ? `<span class="tag-option-desc">${escapeHtml(tag.description)}</span>` : ''}
+                            </div>
                             <span class="tag-option-count">${tag.usageCount || 0}</span>
                         </label>
                     `).join('')}
@@ -1191,8 +1813,10 @@
                 tag = {
                     id: generateId(),
                     name: normalizedName,
+                    description: '',
                     usageCount: 0,
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
                 };
                 data.tags.push(tag);
             }
@@ -1222,6 +1846,116 @@
 
             saveData();
             renderSentenceList();
+        }
+
+        // ==========================================
+        // MERGE SENTENCES
+        // ==========================================
+
+        function toggleMergeMode() {
+            mergeMode = !mergeMode;
+            selectedForMerge.clear();
+            selectedExcerptId = null;
+
+            const btn = document.getElementById('merge-mode-btn');
+            btn.classList.toggle('btn-primary', mergeMode);
+            btn.classList.toggle('btn-secondary', !mergeMode);
+            btn.textContent = mergeMode ? 'Exit Merge Mode' : 'Merge Mode';
+
+            renderSentenceList();
+        }
+
+        function toggleMergeSelect(excerptId, event) {
+            event.stopPropagation();
+
+            if (selectedForMerge.has(excerptId)) {
+                selectedForMerge.delete(excerptId);
+            } else {
+                selectedForMerge.add(excerptId);
+            }
+
+            renderSentenceList();
+        }
+
+        function updateMergeToolbar() {
+            const toolbar = document.getElementById('merge-toolbar');
+            const countEl = document.getElementById('merge-count');
+
+            if (mergeMode && selectedForMerge.size > 0) {
+                toolbar.classList.add('active');
+                countEl.textContent = selectedForMerge.size;
+            } else {
+                toolbar.classList.remove('active');
+            }
+        }
+
+        function clearMergeSelection() {
+            selectedForMerge.clear();
+            renderSentenceList();
+        }
+
+        function mergeSelectedSentences() {
+            if (selectedForMerge.size < 2) {
+                showToast('Select at least 2 sentences to merge', 'error');
+                return;
+            }
+
+            // Get selected excerpts sorted by index
+            const selectedExcerpts = data.excerpts
+                .filter(e => selectedForMerge.has(e.id) && e.transcriptId === currentTranscript.id)
+                .sort((a, b) => a.index - b.index);
+
+            if (selectedExcerpts.length < 2) {
+                showToast('Select at least 2 sentences to merge', 'error');
+                return;
+            }
+
+            // Check if they are consecutive
+            for (let i = 1; i < selectedExcerpts.length; i++) {
+                // Find excerpts between them
+                const prevIdx = selectedExcerpts[i - 1].index;
+                const currIdx = selectedExcerpts[i].index;
+                const between = data.excerpts.filter(e =>
+                    e.transcriptId === currentTranscript.id &&
+                    e.index > prevIdx &&
+                    e.index < currIdx &&
+                    e.isTaggable !== false
+                );
+
+                if (between.length > 0) {
+                    showToast('Can only merge consecutive taggable sentences', 'error');
+                    return;
+                }
+            }
+
+            // Merge: combine text, keep first excerpt's speaker info, merge tags
+            const firstExcerpt = selectedExcerpts[0];
+            const mergedText = selectedExcerpts.map(e => e.text).join(' ');
+            const mergedTags = [...new Set(selectedExcerpts.flatMap(e => e.tagIds || []))];
+
+            // Update first excerpt with merged content
+            firstExcerpt.text = mergedText;
+            firstExcerpt.tagIds = mergedTags;
+
+            // Remove the other excerpts
+            const idsToRemove = selectedExcerpts.slice(1).map(e => e.id);
+            data.excerpts = data.excerpts.filter(e => !idsToRemove.includes(e.id));
+
+            // Reindex remaining excerpts for this transcript
+            const transcriptExcerpts = data.excerpts
+                .filter(e => e.transcriptId === currentTranscript.id)
+                .sort((a, b) => a.index - b.index);
+
+            transcriptExcerpts.forEach((e, i) => {
+                e.index = i;
+            });
+
+            // Clear selection and save
+            selectedForMerge.clear();
+            saveData();
+            renderSentenceList();
+
+            showToast(`Merged ${selectedExcerpts.length} sentences`);
         }
 
         // ==========================================
@@ -1293,6 +2027,319 @@
             const selectedTag = data.tags.find(t => t.id === selectedTagId);
             document.getElementById('results-count').textContent =
                 `Showing ${filtered.length} excerpt${filtered.length !== 1 ? 's' : ''}${selectedTag ? ` with tag "${selectedTag.name}"` : ''}`;
+
+            // Show/hide export one-pager button
+            const exportBtn = document.getElementById('export-onepager-btn');
+            if (selectedTagId && filtered.length > 0) {
+                exportBtn.style.display = 'block';
+            } else {
+                exportBtn.style.display = 'none';
+            }
+        }
+
+        // ==========================================
+        // TAGS VIEW
+        // ==========================================
+
+        let editingTagId = null;
+
+        function renderTagsView() {
+            const tags = [...data.tags].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
+
+            const container = document.getElementById('tags-list');
+
+            if (tags.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No tags yet</h3>
+                        <p>Tags will appear here after you create them while coding transcripts.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = tags.map(tag => {
+                const isEditing = editingTagId === tag.id;
+
+                return `
+                    <div class="tag-card" data-tag-id="${tag.id}">
+                        <div class="tag-card-header">
+                            <span class="tag-card-name">${escapeHtml(tag.name)}</span>
+                            <span class="tag-card-count">${tag.usageCount || 0} uses</span>
+                        </div>
+                        ${isEditing ? `
+                            <textarea class="tag-description-input"
+                                      id="tag-desc-input-${tag.id}"
+                                      placeholder="Describe this theme (2-4 sentences)..."
+                                      onkeydown="handleDescriptionKeydown(event, '${tag.id}')">${escapeHtml(tag.description || '')}</textarea>
+                            <div class="tag-card-actions">
+                                <button class="btn btn-primary btn-small" onclick="saveTagDescription('${tag.id}')">Save</button>
+                                <button class="btn btn-secondary btn-small" onclick="cancelEditDescription()">Cancel</button>
+                            </div>
+                        ` : `
+                            <div class="tag-card-description ${tag.description ? '' : 'empty'}">
+                                ${tag.description ? escapeHtml(tag.description) : 'No description yet. Click "Edit Description" to add one.'}
+                            </div>
+                            <div class="tag-card-actions">
+                                <button class="btn btn-secondary btn-small" onclick="editTagDescription('${tag.id}')">${tag.description ? 'Edit' : 'Add'} Description</button>
+                                <button class="btn btn-secondary btn-small" onclick="exportOnePagerForTag('${tag.id}')">Export One-Pager</button>
+                                ${(tag.usageCount || 0) === 0 ? `<button class="btn btn-danger btn-small" onclick="deleteTag('${tag.id}')">Delete</button>` : ''}
+                            </div>
+                        `}
+                    </div>
+                `;
+            }).join('');
+
+            // Focus textarea if editing
+            if (editingTagId) {
+                const input = document.getElementById(`tag-desc-input-${editingTagId}`);
+                if (input) {
+                    setTimeout(() => input.focus(), 50);
+                }
+            }
+        }
+
+        function editTagDescription(tagId) {
+            editingTagId = tagId;
+            renderTagsView();
+        }
+
+        function cancelEditDescription() {
+            editingTagId = null;
+            renderTagsView();
+        }
+
+        function saveTagDescription(tagId) {
+            const input = document.getElementById(`tag-desc-input-${tagId}`);
+            if (!input) return;
+
+            const tag = data.tags.find(t => t.id === tagId);
+            if (!tag) return;
+
+            tag.description = input.value.trim();
+            tag.updatedAt = new Date().toISOString();
+
+            saveData();
+            editingTagId = null;
+            renderTagsView();
+            showToast('Description saved');
+        }
+
+        function handleDescriptionKeydown(event, tagId) {
+            if (event.key === 'Escape') {
+                cancelEditDescription();
+            } else if (event.key === 'Enter' && event.ctrlKey) {
+                saveTagDescription(tagId);
+            }
+        }
+
+        function deleteTag(tagId) {
+            const tag = data.tags.find(t => t.id === tagId);
+            if (!tag) return;
+
+            pendingConfirmAction = () => {
+                data.tags = data.tags.filter(t => t.id !== tagId);
+                saveData();
+                showToast(`Tag "${tag.name}" deleted`);
+                renderTagsView();
+            };
+
+            document.getElementById('confirm-title').textContent = 'Delete Tag';
+            document.getElementById('confirm-message').textContent = `Are you sure you want to delete the tag "${tag.name}"?`;
+            document.getElementById('confirm-modal').classList.add('active');
+        }
+
+        // ==========================================
+        // EXPORT ONE-PAGER
+        // ==========================================
+
+        let exportingTagId = null;
+
+        function exportOnePager() {
+            const selectedTagId = document.getElementById('tag-filter').value;
+            if (!selectedTagId) return;
+            showExportModal(selectedTagId);
+        }
+
+        function exportOnePagerForTag(tagId) {
+            showExportModal(tagId);
+        }
+
+        function showExportModal(tagId) {
+            const tag = data.tags.find(t => t.id === tagId);
+            if (!tag) return;
+
+            exportingTagId = tagId;
+            document.getElementById('export-modal-title').textContent = `Export: "${tag.name}"`;
+            document.getElementById('export-modal').classList.add('active');
+        }
+
+        function closeExportModal() {
+            document.getElementById('export-modal').classList.remove('active');
+            exportingTagId = null;
+        }
+
+        function executeExport() {
+            if (!exportingTagId) return;
+
+            const options = {
+                includeDescription: document.getElementById('export-opt-description').checked,
+                showParticipant: document.getElementById('export-opt-participant').checked,
+                includeSummary: document.getElementById('export-opt-summary').checked,
+                showSource: document.getElementById('export-opt-source').checked
+            };
+
+            generateOnePagerHTML(exportingTagId, options);
+            closeExportModal();
+        }
+
+        function generateOnePagerHTML(tagId, options) {
+            const tag = data.tags.find(t => t.id === tagId);
+            if (!tag) return;
+
+            const excerpts = data.excerpts.filter(e => e.tagIds && e.tagIds.includes(tagId));
+            const transcriptIds = [...new Set(excerpts.map(e => e.transcriptId))];
+
+            // Group excerpts by transcript
+            const groupedExcerpts = excerpts.map(excerpt => {
+                const transcript = data.transcripts.find(t => t.id === excerpt.transcriptId);
+                return {
+                    ...excerpt,
+                    transcriptTitle: transcript?.title || 'Unknown',
+                    userLabel: transcript?.userLabel || 'Unknown'
+                };
+            }).sort((a, b) => {
+                if (a.transcriptId !== b.transcriptId) {
+                    return a.transcriptId.localeCompare(b.transcriptId);
+                }
+                return a.index - b.index;
+            });
+
+            const participantCount = transcriptIds.length;
+            const excerptCount = excerpts.length;
+
+            const html = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Theme Report: ${escapeHtml(tag.name)}</title>
+    <style>
+        @page { margin: 1in; size: letter; }
+        body {
+            font-family: 'Georgia', serif;
+            max-width: 7in;
+            margin: 0 auto;
+            padding: 40px;
+            color: #1a1a2e;
+            line-height: 1.6;
+        }
+        .report-header {
+            border-bottom: 3px solid #6366f1;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .theme-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a1a2e;
+            margin: 0 0 10px 0;
+        }
+        .description {
+            font-size: 16px;
+            font-style: italic;
+            color: #4a5568;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f7fafc;
+            border-left: 4px solid #6366f1;
+        }
+        .summary {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 30px;
+        }
+        .excerpt-card {
+            margin: 20px 0;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            page-break-inside: avoid;
+        }
+        .participant-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        .excerpt-text {
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .excerpt-source {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px;
+            color: #a0aec0;
+            text-align: center;
+        }
+        @media print {
+            body { padding: 0; }
+            .excerpt-card { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-header">
+        <h1 class="theme-name">${escapeHtml(tag.name)}</h1>
+    </div>
+
+    ${options.includeDescription && tag.description ? `<div class="description">${escapeHtml(tag.description)}</div>` : ''}
+
+    ${options.includeSummary ? `<div class="summary">
+        <strong>${excerptCount} excerpt${excerptCount !== 1 ? 's' : ''}</strong> from
+        <strong>${participantCount} participant${participantCount !== 1 ? 's' : ''}</strong>
+    </div>` : ''}
+
+    <div class="excerpts">
+        ${groupedExcerpts.map(excerpt => `
+            <div class="excerpt-card">
+                ${options.showParticipant ? `<span class="participant-badge">${escapeHtml(excerpt.userLabel)}</span>` : ''}
+                <p class="excerpt-text">"${escapeHtml(excerpt.text)}"</p>
+                ${options.showSource ? `<div class="excerpt-source">
+                    Source: ${escapeHtml(excerpt.transcriptTitle)} (Sentence #${excerpt.index + 1})
+                </div>` : ''}
+            </div>
+        `).join('')}
+    </div>
+
+    <div class="footer">
+        Generated by QualCoder | ${new Date().toLocaleDateString()}
+    </div>
+</body>
+</html>`;
+
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${tag.name.replace(/[^a-z0-9]/gi, '-')}-one-pager.html`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+            showToast('One-pager exported');
         }
 
         // ==========================================
@@ -1491,6 +2538,8 @@
                     closeNewTranscriptModal();
                 } else if (document.getElementById('confirm-modal').classList.contains('active')) {
                     closeConfirmModal();
+                } else if (document.getElementById('export-modal').classList.contains('active')) {
+                    closeExportModal();
                 } else if (selectedExcerptId) {
                     selectedExcerptId = null;
                     renderSentenceList();
