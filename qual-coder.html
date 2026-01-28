@@ -860,6 +860,62 @@
             border-color: var(--border);
         }
 
+        /* Multi-select for merging */
+        .sentence-item.multi-selected {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--accent);
+        }
+
+        .sentence-item .select-checkbox {
+            position: absolute;
+            top: 12px;
+            left: -28px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .sentence-list.merge-mode .sentence-item .select-checkbox {
+            opacity: 1;
+        }
+
+        .sentence-item:hover .select-checkbox {
+            opacity: 0.7;
+        }
+
+        .sentence-item.multi-selected .select-checkbox {
+            opacity: 1;
+        }
+
+        /* Merge toolbar */
+        .merge-toolbar {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .merge-toolbar.active {
+            display: flex;
+        }
+
+        .merge-toolbar-text {
+            flex: 1;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .merge-toolbar-text strong {
+            color: var(--text-primary);
+        }
+
         /* Parse Format Selector */
         .parse-format-group {
             display: flex;
@@ -940,7 +996,15 @@
                         <div class="meta" id="coding-transcript-meta"></div>
                     </div>
                 </div>
-                <button class="btn btn-secondary btn-small" onclick="exportTranscript()">Export This</button>
+                <div class="header-actions">
+                    <button class="btn btn-secondary btn-small" id="merge-mode-btn" onclick="toggleMergeMode()">Merge Mode</button>
+                    <button class="btn btn-secondary btn-small" onclick="exportTranscript()">Export This</button>
+                </div>
+            </div>
+            <div id="merge-toolbar" class="merge-toolbar">
+                <span class="merge-toolbar-text"><strong id="merge-count">0</strong> sentences selected</span>
+                <button class="btn btn-secondary btn-small" onclick="clearMergeSelection()">Clear</button>
+                <button class="btn btn-primary btn-small" onclick="mergeSelectedSentences()">Merge Selected</button>
             </div>
             <div id="sentence-list" class="sentence-list"></div>
         </div>
@@ -1180,6 +1244,8 @@
         let currentTranscript = null;
         let selectedExcerptId = null;
         let pendingConfirmAction = null;
+        let mergeMode = false;
+        let selectedForMerge = new Set();
 
         // ==========================================
         // SENTENCE PARSING
@@ -1544,6 +1610,8 @@
         function backToList() {
             currentTranscript = null;
             selectedExcerptId = null;
+            mergeMode = false;
+            selectedForMerge.clear();
             switchView('transcripts');
         }
 
@@ -1555,6 +1623,9 @@
 
             const container = document.getElementById('sentence-list');
 
+            // Toggle merge-mode class on container
+            container.classList.toggle('merge-mode', mergeMode);
+
             container.innerHTML = excerpts.map(excerpt => {
                 const excerptTags = tags.filter(t => excerpt.tagIds && excerpt.tagIds.includes(t.id));
                 const isSelected = selectedExcerptId === excerpt.id;
@@ -1562,12 +1633,14 @@
                 const speakerType = excerpt.speakerType || 'unknown';
                 const speakerLabel = excerpt.speakerLabel || '';
                 const isTaggable = excerpt.isTaggable !== false;
+                const isSelectedForMerge = selectedForMerge.has(excerpt.id);
 
                 return `
-                    <div class="sentence-item ${isSelected ? 'selected' : ''} ${isTagged ? 'tagged' : ''} ${!isTaggable ? 'non-taggable' : ''}"
+                    <div class="sentence-item ${isSelected ? 'selected' : ''} ${isTagged ? 'tagged' : ''} ${!isTaggable ? 'non-taggable' : ''} ${isSelectedForMerge ? 'multi-selected' : ''}"
                          data-excerpt-id="${excerpt.id}"
                          data-speaker="${speakerType}"
-                         onclick="${isTaggable ? `selectExcerpt('${excerpt.id}', event)` : ''}">
+                         onclick="${mergeMode && isTaggable ? `toggleMergeSelect('${excerpt.id}', event)` : (isTaggable ? `selectExcerpt('${excerpt.id}', event)` : '')}">
+                        ${isTaggable ? `<input type="checkbox" class="select-checkbox" ${isSelectedForMerge ? 'checked' : ''} onclick="toggleMergeSelect('${excerpt.id}', event)">` : ''}
                         <div class="sentence-number">${excerpt.index + 1}</div>
                         <div class="sentence-content">
                             <div class="sentence-text">${escapeHtml(excerpt.text)}</div>
@@ -1583,10 +1656,13 @@
                             ` : ''}
                         </div>
                         ${speakerLabel ? `<span class="speaker-badge speaker-badge--${speakerType}">${escapeHtml(speakerLabel)}</span>` : ''}
-                        ${isSelected && isTaggable ? renderTagPopover(excerpt) : ''}
+                        ${isSelected && isTaggable && !mergeMode ? renderTagPopover(excerpt) : ''}
                     </div>
                 `;
             }).join('');
+
+            // Update merge toolbar
+            updateMergeToolbar();
         }
 
         function selectExcerpt(excerptId, event) {
@@ -1770,6 +1846,116 @@
 
             saveData();
             renderSentenceList();
+        }
+
+        // ==========================================
+        // MERGE SENTENCES
+        // ==========================================
+
+        function toggleMergeMode() {
+            mergeMode = !mergeMode;
+            selectedForMerge.clear();
+            selectedExcerptId = null;
+
+            const btn = document.getElementById('merge-mode-btn');
+            btn.classList.toggle('btn-primary', mergeMode);
+            btn.classList.toggle('btn-secondary', !mergeMode);
+            btn.textContent = mergeMode ? 'Exit Merge Mode' : 'Merge Mode';
+
+            renderSentenceList();
+        }
+
+        function toggleMergeSelect(excerptId, event) {
+            event.stopPropagation();
+
+            if (selectedForMerge.has(excerptId)) {
+                selectedForMerge.delete(excerptId);
+            } else {
+                selectedForMerge.add(excerptId);
+            }
+
+            renderSentenceList();
+        }
+
+        function updateMergeToolbar() {
+            const toolbar = document.getElementById('merge-toolbar');
+            const countEl = document.getElementById('merge-count');
+
+            if (mergeMode && selectedForMerge.size > 0) {
+                toolbar.classList.add('active');
+                countEl.textContent = selectedForMerge.size;
+            } else {
+                toolbar.classList.remove('active');
+            }
+        }
+
+        function clearMergeSelection() {
+            selectedForMerge.clear();
+            renderSentenceList();
+        }
+
+        function mergeSelectedSentences() {
+            if (selectedForMerge.size < 2) {
+                showToast('Select at least 2 sentences to merge', 'error');
+                return;
+            }
+
+            // Get selected excerpts sorted by index
+            const selectedExcerpts = data.excerpts
+                .filter(e => selectedForMerge.has(e.id) && e.transcriptId === currentTranscript.id)
+                .sort((a, b) => a.index - b.index);
+
+            if (selectedExcerpts.length < 2) {
+                showToast('Select at least 2 sentences to merge', 'error');
+                return;
+            }
+
+            // Check if they are consecutive
+            for (let i = 1; i < selectedExcerpts.length; i++) {
+                // Find excerpts between them
+                const prevIdx = selectedExcerpts[i - 1].index;
+                const currIdx = selectedExcerpts[i].index;
+                const between = data.excerpts.filter(e =>
+                    e.transcriptId === currentTranscript.id &&
+                    e.index > prevIdx &&
+                    e.index < currIdx &&
+                    e.isTaggable !== false
+                );
+
+                if (between.length > 0) {
+                    showToast('Can only merge consecutive taggable sentences', 'error');
+                    return;
+                }
+            }
+
+            // Merge: combine text, keep first excerpt's speaker info, merge tags
+            const firstExcerpt = selectedExcerpts[0];
+            const mergedText = selectedExcerpts.map(e => e.text).join(' ');
+            const mergedTags = [...new Set(selectedExcerpts.flatMap(e => e.tagIds || []))];
+
+            // Update first excerpt with merged content
+            firstExcerpt.text = mergedText;
+            firstExcerpt.tagIds = mergedTags;
+
+            // Remove the other excerpts
+            const idsToRemove = selectedExcerpts.slice(1).map(e => e.id);
+            data.excerpts = data.excerpts.filter(e => !idsToRemove.includes(e.id));
+
+            // Reindex remaining excerpts for this transcript
+            const transcriptExcerpts = data.excerpts
+                .filter(e => e.transcriptId === currentTranscript.id)
+                .sort((a, b) => a.index - b.index);
+
+            transcriptExcerpts.forEach((e, i) => {
+                e.index = i;
+            });
+
+            // Clear selection and save
+            selectedForMerge.clear();
+            saveData();
+            renderSentenceList();
+
+            showToast(`Merged ${selectedExcerpts.length} sentences`);
         }
 
         // ==========================================
