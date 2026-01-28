@@ -750,6 +750,40 @@
         .export-onepager-btn {
             margin-left: auto;
         }
+
+        /* Export Options Dialog */
+        .export-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .export-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .export-option:hover {
+            background: var(--bg-hover);
+        }
+
+        .export-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        .export-option span {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
     </style>
 </head>
 <body>
@@ -863,6 +897,41 @@
 
     <!-- Hidden file input for import -->
     <input type="file" id="import-file" accept=".json" style="display: none" onchange="handleImportFile(event)">
+
+    <!-- Export One-Pager Options Modal -->
+    <div id="export-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="export-modal-title">Export One-Pager</h2>
+                <button class="modal-close" onclick="closeExportModal()">&times;</button>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                Choose what to include in your exported report.
+            </p>
+            <div class="export-options">
+                <label class="export-option">
+                    <input type="checkbox" id="export-opt-description" checked>
+                    <span>Include tag description</span>
+                </label>
+                <label class="export-option">
+                    <input type="checkbox" id="export-opt-participant" checked>
+                    <span>Show participant labels</span>
+                </label>
+                <label class="export-option">
+                    <input type="checkbox" id="export-opt-summary" checked>
+                    <span>Include excerpt count summary</span>
+                </label>
+                <label class="export-option">
+                    <input type="checkbox" id="export-opt-source" checked>
+                    <span>Show source transcript info</span>
+                </label>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeExportModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="executeExport()">Export</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // ==========================================
@@ -1558,13 +1627,47 @@
         // EXPORT ONE-PAGER
         // ==========================================
 
+        let exportingTagId = null;
+
         function exportOnePager() {
             const selectedTagId = document.getElementById('tag-filter').value;
             if (!selectedTagId) return;
-            exportOnePagerForTag(selectedTagId);
+            showExportModal(selectedTagId);
         }
 
         function exportOnePagerForTag(tagId) {
+            showExportModal(tagId);
+        }
+
+        function showExportModal(tagId) {
+            const tag = data.tags.find(t => t.id === tagId);
+            if (!tag) return;
+
+            exportingTagId = tagId;
+            document.getElementById('export-modal-title').textContent = `Export: "${tag.name}"`;
+            document.getElementById('export-modal').classList.add('active');
+        }
+
+        function closeExportModal() {
+            document.getElementById('export-modal').classList.remove('active');
+            exportingTagId = null;
+        }
+
+        function executeExport() {
+            if (!exportingTagId) return;
+
+            const options = {
+                includeDescription: document.getElementById('export-opt-description').checked,
+                showParticipant: document.getElementById('export-opt-participant').checked,
+                includeSummary: document.getElementById('export-opt-summary').checked,
+                showSource: document.getElementById('export-opt-source').checked
+            };
+
+            generateOnePagerHTML(exportingTagId, options);
+            closeExportModal();
+        }
+
+        function generateOnePagerHTML(tagId, options) {
             const tag = data.tags.find(t => t.id === tagId);
             if (!tag) return;
 
@@ -1676,21 +1779,21 @@
         <h1 class="theme-name">${escapeHtml(tag.name)}</h1>
     </div>
 
-    ${tag.description ? `<div class="description">${escapeHtml(tag.description)}</div>` : ''}
+    ${options.includeDescription && tag.description ? `<div class="description">${escapeHtml(tag.description)}</div>` : ''}
 
-    <div class="summary">
+    ${options.includeSummary ? `<div class="summary">
         <strong>${excerptCount} excerpt${excerptCount !== 1 ? 's' : ''}</strong> from
         <strong>${participantCount} participant${participantCount !== 1 ? 's' : ''}</strong>
-    </div>
+    </div>` : ''}
 
     <div class="excerpts">
         ${groupedExcerpts.map(excerpt => `
             <div class="excerpt-card">
-                <span class="participant-badge">${escapeHtml(excerpt.userLabel)}</span>
+                ${options.showParticipant ? `<span class="participant-badge">${escapeHtml(excerpt.userLabel)}</span>` : ''}
                 <p class="excerpt-text">"${escapeHtml(excerpt.text)}"</p>
-                <div class="excerpt-source">
+                ${options.showSource ? `<div class="excerpt-source">
                     Source: ${escapeHtml(excerpt.transcriptTitle)} (Sentence #${excerpt.index + 1})
-                </div>
+                </div>` : ''}
             </div>
         `).join('')}
     </div>
@@ -1909,6 +2012,8 @@
                     closeNewTranscriptModal();
                 } else if (document.getElementById('confirm-modal').classList.contains('active')) {
                     closeConfirmModal();
+                } else if (document.getElementById('export-modal').classList.contains('active')) {
+                    closeExportModal();
                 } else if (selectedExcerptId) {
                     selectedExcerptId = null;
                     renderSentenceList();
