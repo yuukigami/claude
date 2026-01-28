@@ -784,6 +784,125 @@
             font-size: 0.9rem;
             color: var(--text-primary);
         }
+
+        /* Speaker Type Styles */
+        .sentence-item[data-speaker="task"] {
+            background: rgba(245, 158, 11, 0.15);
+            border-left: 4px solid #f59e0b;
+        }
+
+        .sentence-item[data-speaker="task"]:hover {
+            background: rgba(245, 158, 11, 0.25);
+        }
+
+        .sentence-item[data-speaker="question"] {
+            background: rgba(59, 130, 246, 0.15);
+            border-left: 4px solid #3b82f6;
+        }
+
+        .sentence-item[data-speaker="question"]:hover {
+            background: rgba(59, 130, 246, 0.25);
+        }
+
+        .sentence-item[data-speaker="participant"] {
+            border-left: 4px solid #10b981;
+        }
+
+        .sentence-item[data-speaker="moderator"] {
+            background: rgba(139, 92, 246, 0.15);
+            border-left: 4px solid #8b5cf6;
+        }
+
+        .sentence-item[data-speaker="moderator"]:hover {
+            background: rgba(139, 92, 246, 0.25);
+        }
+
+        .speaker-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+        }
+
+        .speaker-badge--task {
+            background: rgba(245, 158, 11, 0.3);
+            color: #f59e0b;
+        }
+
+        .speaker-badge--question {
+            background: rgba(59, 130, 246, 0.3);
+            color: #3b82f6;
+        }
+
+        .speaker-badge--participant {
+            background: rgba(16, 185, 129, 0.3);
+            color: #10b981;
+        }
+
+        .speaker-badge--moderator {
+            background: rgba(139, 92, 246, 0.3);
+            color: #8b5cf6;
+        }
+
+        .sentence-item.non-taggable {
+            opacity: 0.7;
+            cursor: default;
+        }
+
+        .sentence-item.non-taggable:hover {
+            border-color: var(--border);
+        }
+
+        /* Parse Format Selector */
+        .parse-format-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .parse-format-option {
+            flex: 1;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .parse-format-option:hover {
+            border-color: var(--border-light);
+        }
+
+        .parse-format-option.selected {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .parse-format-option input {
+            display: none;
+        }
+
+        .parse-format-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .parse-format-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
@@ -865,6 +984,21 @@
             <div class="form-group">
                 <label>User Label</label>
                 <input type="text" id="transcript-user" class="form-input" placeholder="e.g., User 5">
+            </div>
+            <div class="form-group">
+                <label>Parse Format</label>
+                <div class="parse-format-group">
+                    <label class="parse-format-option selected" onclick="selectParseFormat('auto')">
+                        <input type="radio" name="parse-format" value="auto" checked>
+                        <span class="parse-format-label">Auto-Detect</span>
+                        <span class="parse-format-desc">Detect speakers automatically</span>
+                    </label>
+                    <label class="parse-format-option" onclick="selectParseFormat('raw')">
+                        <input type="radio" name="parse-format" value="raw">
+                        <span class="parse-format-label">Raw</span>
+                        <span class="parse-format-desc">Split by sentence only</span>
+                    </label>
+                </div>
             </div>
             <div class="form-group">
                 <label>Paste transcript text</label>
@@ -960,7 +1094,7 @@
             }
         }
 
-        // Migration: Add description field to existing tags
+        // Migration: Add new fields to existing data
         function migrateData() {
             let needsSave = false;
 
@@ -969,6 +1103,24 @@
                 if (tag.description === undefined) {
                     tag.description = '';
                     tag.updatedAt = tag.createdAt || new Date().toISOString();
+                    needsSave = true;
+                }
+            }
+
+            // Add speaker fields to excerpts that don't have them
+            for (const excerpt of data.excerpts) {
+                if (excerpt.speakerType === undefined) {
+                    excerpt.speakerType = 'unknown';
+                    excerpt.speakerLabel = '';
+                    excerpt.isTaggable = true;
+                    needsSave = true;
+                }
+            }
+
+            // Add parseFormat to transcripts that don't have it
+            for (const transcript of data.transcripts) {
+                if (transcript.parseFormat === undefined) {
+                    transcript.parseFormat = 'raw';
                     needsSave = true;
                 }
             }
@@ -1057,6 +1209,152 @@
                     restored = restored.replace(new RegExp(`__ABBR${i}__`, 'g'), `${abbr}.`);
                 });
                 return restored;
+            });
+        }
+
+        // ==========================================
+        // SPEAKER DETECTION
+        // ==========================================
+
+        const SPEAKER_PATTERNS = {
+            task: [
+                /^Task\s*\d*[:\s]/i,
+                /^\[Task\s*\d*\]/i,
+                /^TASK\s*\d*[:\s]/
+            ],
+            question: [
+                /^(Question|Q)\s*\d*[:\s]/i,
+                /^\[Q\d*\]/i,
+                /^Interviewer[:\s]/i
+            ],
+            moderator: [
+                /^(Moderator|M)[:\s]/i,
+                /^Facilitator[:\s]/i,
+                /^Researcher[:\s]/i
+            ],
+            participant: [
+                /^(Participant|P|User|U)\s*\d*[:\s]/i,
+                /^(Respondent|R)\s*\d*[:\s]/i,
+                /^Tester\s*\d*[:\s]/i
+            ]
+        };
+
+        function detectSpeaker(line) {
+            const trimmed = line.trim();
+            if (!trimmed) return null;
+
+            for (const [speakerType, patterns] of Object.entries(SPEAKER_PATTERNS)) {
+                for (const pattern of patterns) {
+                    const match = trimmed.match(pattern);
+                    if (match) {
+                        const label = match[0].replace(/[:\s]+$/, '').trim();
+                        const text = trimmed.slice(match[0].length).trim();
+                        return {
+                            speakerType,
+                            speakerLabel: normalizeLabel(label, speakerType),
+                            text: text || trimmed,
+                            isTaggable: speakerType === 'participant'
+                        };
+                    }
+                }
+            }
+
+            return {
+                speakerType: 'unknown',
+                speakerLabel: '',
+                text: trimmed,
+                isTaggable: true
+            };
+        }
+
+        function normalizeLabel(label, speakerType) {
+            // Normalize labels to consistent format
+            const upper = label.toUpperCase();
+
+            if (speakerType === 'task') {
+                const num = label.match(/\d+/);
+                return num ? `Task ${num[0]}` : 'Task';
+            }
+            if (speakerType === 'question') {
+                const num = label.match(/\d+/);
+                return num ? `Q${num[0]}` : 'Question';
+            }
+            if (speakerType === 'participant') {
+                const num = label.match(/\d+/);
+                return num ? `P${num[0]}` : 'Participant';
+            }
+            if (speakerType === 'moderator') {
+                return 'Moderator';
+            }
+            return label;
+        }
+
+        function parseTranscriptWithSpeakers(rawText) {
+            const lines = rawText.split(/\n+/).filter(line => line.trim());
+            const excerpts = [];
+            let currentSpeaker = null;
+            let currentText = [];
+
+            for (const line of lines) {
+                const detected = detectSpeaker(line);
+
+                if (detected.speakerType !== 'unknown' && detected.speakerLabel) {
+                    // New speaker detected - save previous block
+                    if (currentText.length > 0 && currentSpeaker) {
+                        const text = currentText.join(' ').trim();
+                        if (text) {
+                            const sentences = parseSentences(text);
+                            for (const sentence of sentences) {
+                                excerpts.push({
+                                    ...currentSpeaker,
+                                    text: sentence
+                                });
+                            }
+                        }
+                    }
+
+                    currentSpeaker = {
+                        speakerType: detected.speakerType,
+                        speakerLabel: detected.speakerLabel,
+                        isTaggable: detected.isTaggable
+                    };
+                    currentText = detected.text ? [detected.text] : [];
+                } else {
+                    // Continue with current speaker or unknown
+                    if (!currentSpeaker) {
+                        currentSpeaker = {
+                            speakerType: 'unknown',
+                            speakerLabel: '',
+                            isTaggable: true
+                        };
+                    }
+                    currentText.push(detected.text);
+                }
+            }
+
+            // Don't forget the last block
+            if (currentText.length > 0 && currentSpeaker) {
+                const text = currentText.join(' ').trim();
+                if (text) {
+                    const sentences = parseSentences(text);
+                    for (const sentence of sentences) {
+                        excerpts.push({
+                            ...currentSpeaker,
+                            text: sentence
+                        });
+                    }
+                }
+            }
+
+            return excerpts;
+        }
+
+        let selectedParseFormat = 'auto';
+
+        function selectParseFormat(format) {
+            selectedParseFormat = format;
+            document.querySelectorAll('.parse-format-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.querySelector('input').value === format);
             });
         }
 
@@ -1164,29 +1462,64 @@
                 title,
                 userLabel: userLabel || 'Unknown User',
                 rawText,
+                parseFormat: selectedParseFormat,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
 
             data.transcripts.push(transcript);
 
-            // Parse sentences and create excerpts
-            const sentences = parseSentences(rawText);
-            for (let i = 0; i < sentences.length; i++) {
-                const excerpt = {
-                    id: generateId(),
-                    transcriptId: transcript.id,
-                    text: sentences[i],
-                    index: i,
-                    tagIds: [],
-                    createdAt: new Date().toISOString()
-                };
-                data.excerpts.push(excerpt);
+            // Parse based on selected format
+            let excerptCount = 0;
+            if (selectedParseFormat === 'auto') {
+                // Use speaker detection
+                const parsedExcerpts = parseTranscriptWithSpeakers(rawText);
+                for (let i = 0; i < parsedExcerpts.length; i++) {
+                    const parsed = parsedExcerpts[i];
+                    const excerpt = {
+                        id: generateId(),
+                        transcriptId: transcript.id,
+                        text: parsed.text,
+                        index: i,
+                        tagIds: [],
+                        speakerType: parsed.speakerType,
+                        speakerLabel: parsed.speakerLabel,
+                        isTaggable: parsed.isTaggable,
+                        createdAt: new Date().toISOString()
+                    };
+                    data.excerpts.push(excerpt);
+                }
+                excerptCount = parsedExcerpts.length;
+            } else {
+                // Raw mode - just split by sentences
+                const sentences = parseSentences(rawText);
+                for (let i = 0; i < sentences.length; i++) {
+                    const excerpt = {
+                        id: generateId(),
+                        transcriptId: transcript.id,
+                        text: sentences[i],
+                        index: i,
+                        tagIds: [],
+                        speakerType: 'unknown',
+                        speakerLabel: '',
+                        isTaggable: true,
+                        createdAt: new Date().toISOString()
+                    };
+                    data.excerpts.push(excerpt);
+                }
+                excerptCount = sentences.length;
             }
 
             saveData();
             closeNewTranscriptModal();
-            showToast(`Imported ${sentences.length} sentences`);
+
+            // Reset parse format to default
+            selectedParseFormat = 'auto';
+            document.querySelectorAll('.parse-format-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.querySelector('input').value === 'auto');
+            });
+
+            showToast(`Imported ${excerptCount} sentences`);
             openTranscript(transcript.id);
         }
 
@@ -1226,14 +1559,19 @@
                 const excerptTags = tags.filter(t => excerpt.tagIds && excerpt.tagIds.includes(t.id));
                 const isSelected = selectedExcerptId === excerpt.id;
                 const isTagged = excerpt.tagIds && excerpt.tagIds.length > 0;
+                const speakerType = excerpt.speakerType || 'unknown';
+                const speakerLabel = excerpt.speakerLabel || '';
+                const isTaggable = excerpt.isTaggable !== false;
 
                 return `
-                    <div class="sentence-item ${isSelected ? 'selected' : ''} ${isTagged ? 'tagged' : ''}"
+                    <div class="sentence-item ${isSelected ? 'selected' : ''} ${isTagged ? 'tagged' : ''} ${!isTaggable ? 'non-taggable' : ''}"
                          data-excerpt-id="${excerpt.id}"
-                         onclick="selectExcerpt('${excerpt.id}', event)">
+                         data-speaker="${speakerType}"
+                         onclick="${isTaggable ? `selectExcerpt('${excerpt.id}', event)` : ''}">
                         <div class="sentence-number">${excerpt.index + 1}</div>
                         <div class="sentence-content">
                             <div class="sentence-text">${escapeHtml(excerpt.text)}</div>
+                            ${isTaggable ? `
                             <div class="sentence-tags">
                                 ${excerptTags.map(tag => `
                                     <span class="tag">
@@ -1242,8 +1580,10 @@
                                     </span>
                                 `).join('')}
                             </div>
+                            ` : ''}
                         </div>
-                        ${isSelected ? renderTagPopover(excerpt) : ''}
+                        ${speakerLabel ? `<span class="speaker-badge speaker-badge--${speakerType}">${escapeHtml(speakerLabel)}</span>` : ''}
+                        ${isSelected && isTaggable ? renderTagPopover(excerpt) : ''}
                     </div>
                 `;
             }).join('');
