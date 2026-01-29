@@ -26,6 +26,8 @@
             --kpi-color: #C45C3E;
             --theme-color: #2D4A5E;
             --problem-color: #D9D9D9;
+            --supporting-color: #E8F4E8;
+            --supporting-border: #8BC48A;
             --experiment-color: #FFFFFF;
             --experiment-border: #e0e0e0;
 
@@ -46,6 +48,8 @@
             --kpi-color: #D46B4D;
             --theme-color: #3A5F7E;
             --problem-color: #4a4a4a;
+            --supporting-color: #2d3d2d;
+            --supporting-border: #4a6a4a;
             --experiment-color: #2d2d2d;
             --experiment-border: #3a3a3a;
 
@@ -428,6 +432,10 @@
             align-items: flex-start;
         }
 
+        .grid-content.supporting-row {
+            align-items: flex-start;
+        }
+
         /* KPI Box */
         .kpi-container {
             display: inline-flex;
@@ -566,6 +574,100 @@
             transform: translateY(-2px);
             box-shadow: var(--shadow);
             border-color: var(--theme-color);
+        }
+
+        /* Supporting Data Section */
+        .supporting-data-section {
+            margin-top: 8px;
+        }
+
+        .supporting-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: var(--supporting-color);
+            border: 1px solid var(--supporting-border);
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .supporting-toggle:hover {
+            background: var(--supporting-border);
+            color: var(--text-primary);
+        }
+
+        .supporting-toggle .toggle-icon {
+            transition: transform 0.2s;
+        }
+
+        .supporting-toggle.expanded .toggle-icon {
+            transform: rotate(90deg);
+        }
+
+        .supporting-data-container {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 6px;
+            padding: 8px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            border: 1px dashed var(--supporting-border);
+        }
+
+        .supporting-data-container.expanded {
+            display: flex;
+        }
+
+        .supporting-box {
+            background: var(--supporting-color);
+            color: var(--text-primary);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: 1px solid var(--supporting-border);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .supporting-box:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .add-supporting-btn {
+            background: transparent;
+            border: 1px dashed var(--supporting-border);
+            color: var(--text-secondary);
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-supporting-btn:hover {
+            background: var(--supporting-color);
+            border-style: solid;
+        }
+
+        [data-mode="present"] .add-supporting-btn {
+            display: none !important;
+        }
+
+        [data-mode="present"] .supporting-toggle {
+            pointer-events: auto;
+            cursor: pointer;
         }
 
         /* Add buttons */
@@ -1059,7 +1161,21 @@
                 </div>
 
                 <div class="panel-section">
-                    <h3>4. Experiments (optional)</h3>
+                    <h3>4. Supporting Data (optional)</h3>
+                    <div class="input-group">
+                        <select id="supportingProblemSelect">
+                            <option value="">Select problem...</option>
+                        </select>
+                    </div>
+                    <textarea id="supportingInput" placeholder="User research shows 40% drop-off at shipping&#10;Heatmaps indicate confusion on form"></textarea>
+                    <div class="help-text">Add data points that support your problem statements</div>
+                    <div class="input-group">
+                        <button onclick="app.addSupportingData()" class="secondary small">Add to Problem</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3>5. Experiments (optional)</h3>
                     <div class="input-group">
                         <select id="problemSelect">
                             <option value="">Select problem...</option>
@@ -1099,6 +1215,13 @@
                 <div class="grid-row">
                     <div class="grid-label">Problem Statements:</div>
                     <div class="grid-content problems-row" id="problemsRow">
+                    </div>
+                </div>
+
+                <!-- Supporting Data Row -->
+                <div class="grid-row">
+                    <div class="grid-label">Supporting Data:</div>
+                    <div class="grid-content supporting-row" id="supportingRow">
                     </div>
                 </div>
 
@@ -2017,6 +2140,7 @@
                 this.renderKPI();
                 this.renderThemes();
                 this.renderProblems();
+                this.renderSupportingData();
                 this.renderExperiments();
                 this.updateDropdowns();
                 // Sync widths after rendering
@@ -2233,6 +2357,188 @@
                 });
             }
 
+            renderSupportingData() {
+                const supportingRow = document.getElementById('supportingRow');
+                supportingRow.innerHTML = '';
+
+                this.data.themes.forEach((theme, themeIndex) => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'theme-wrapper';
+
+                    const problemsContainer = document.createElement('div');
+                    problemsContainer.className = 'problems-container';
+
+                    theme.problems.forEach((problem, problemIndex) => {
+                        // Initialize supportingData array if it doesn't exist
+                        if (!problem.supportingData) {
+                            problem.supportingData = [];
+                        }
+
+                        const problemColumn = document.createElement('div');
+                        problemColumn.className = 'problem-column';
+
+                        const supportingSection = document.createElement('div');
+                        supportingSection.className = 'supporting-data-section';
+
+                        // Collapsible toggle
+                        const toggleId = `supporting-${themeIndex}-${problemIndex}`;
+                        const isExpanded = this.expandedSupportingData && this.expandedSupportingData[toggleId];
+
+                        const toggle = document.createElement('button');
+                        toggle.className = `supporting-toggle${isExpanded ? ' expanded' : ''}`;
+                        toggle.innerHTML = `<span class="toggle-icon">▶</span> Data (${problem.supportingData.length})`;
+                        toggle.onclick = () => this.toggleSupportingData(toggleId);
+
+                        const container = document.createElement('div');
+                        container.className = `supporting-data-container${isExpanded ? ' expanded' : ''}`;
+                        container.id = toggleId;
+
+                        // Render supporting data items
+                        problem.supportingData.forEach((data, dataIndex) => {
+                            const dataBox = document.createElement('div');
+                            dataBox.className = 'supporting-box';
+                            dataBox.textContent = data.text;
+                            dataBox.onclick = () => this.editSupportingData(dataBox, themeIndex, problemIndex, dataIndex);
+
+                            // Add delete button
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.className = 'delete-btn';
+                            deleteBtn.innerHTML = '&times;';
+                            deleteBtn.title = 'Delete Supporting Data';
+                            deleteBtn.onclick = (e) => {
+                                e.stopPropagation();
+                                this.deleteSupportingData(themeIndex, problemIndex, dataIndex);
+                            };
+                            dataBox.appendChild(deleteBtn);
+
+                            container.appendChild(dataBox);
+                        });
+
+                        // Add button
+                        const addBtn = document.createElement('button');
+                        addBtn.className = 'add-supporting-btn';
+                        addBtn.textContent = '+';
+                        addBtn.onclick = () => this.addSupportingDataToProblem(themeIndex, problemIndex);
+                        container.appendChild(addBtn);
+
+                        supportingSection.appendChild(toggle);
+                        supportingSection.appendChild(container);
+                        problemColumn.appendChild(supportingSection);
+                        problemsContainer.appendChild(problemColumn);
+                    });
+
+                    wrapper.appendChild(problemsContainer);
+                    supportingRow.appendChild(wrapper);
+                });
+            }
+
+            toggleSupportingData(toggleId) {
+                if (!this.expandedSupportingData) {
+                    this.expandedSupportingData = {};
+                }
+                this.expandedSupportingData[toggleId] = !this.expandedSupportingData[toggleId];
+
+                const container = document.getElementById(toggleId);
+                const toggle = container.previousElementSibling;
+
+                if (this.expandedSupportingData[toggleId]) {
+                    container.classList.add('expanded');
+                    toggle.classList.add('expanded');
+                } else {
+                    container.classList.remove('expanded');
+                    toggle.classList.remove('expanded');
+                }
+            }
+
+            addSupportingDataToProblem(themeIndex, problemIndex) {
+                const text = prompt('Enter supporting data:');
+                if (text && text.trim()) {
+                    if (!this.data.themes[themeIndex].problems[problemIndex].supportingData) {
+                        this.data.themes[themeIndex].problems[problemIndex].supportingData = [];
+                    }
+                    this.data.themes[themeIndex].problems[problemIndex].supportingData.push({
+                        text: text.trim()
+                    });
+                    this.saveToStorage();
+                    this.render();
+                }
+            }
+
+            addSupportingData() {
+                const problemSelect = document.getElementById('supportingProblemSelect');
+                const indices = problemSelect.value.split('-');
+
+                if (indices.length !== 2) {
+                    alert('Please select a problem first!');
+                    return;
+                }
+
+                const themeIndex = parseInt(indices[0]);
+                const problemIndex = parseInt(indices[1]);
+                const input = document.getElementById('supportingInput');
+                const lines = this.parseLines(input.value);
+
+                if (lines.length > 0) {
+                    if (!this.data.themes[themeIndex].problems[problemIndex].supportingData) {
+                        this.data.themes[themeIndex].problems[problemIndex].supportingData = [];
+                    }
+                    lines.forEach(line => {
+                        this.data.themes[themeIndex].problems[problemIndex].supportingData.push({
+                            text: line
+                        });
+                    });
+                    input.value = '';
+                    this.saveToStorage();
+                    this.render();
+                    this.showSuccess(`Added ${lines.length} supporting data item(s)!`);
+                }
+            }
+
+            editSupportingData(element, themeIndex, problemIndex, dataIndex) {
+                if (document.body.getAttribute('data-mode') === 'present') return;
+
+                const current = this.data.themes[themeIndex].problems[problemIndex].supportingData[dataIndex].text;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'edit-input';
+                input.value = current;
+                input.style.fontSize = '12px';
+
+                element.innerHTML = '';
+                element.appendChild(input);
+                input.focus();
+                input.select();
+
+                const save = () => {
+                    const value = input.value.trim();
+                    if (value) {
+                        this.data.themes[themeIndex].problems[problemIndex].supportingData[dataIndex].text = value;
+                        this.saveToStorage();
+                        this.render();
+                    } else {
+                        this.render();
+                    }
+                };
+
+                input.addEventListener('blur', save);
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') save();
+                });
+            }
+
+            deleteSupportingData(themeIndex, problemIndex, dataIndex) {
+                const data = this.data.themes[themeIndex].problems[problemIndex].supportingData[dataIndex];
+
+                if (!confirm(`Are you sure you want to delete this supporting data?`)) {
+                    return;
+                }
+
+                this.data.themes[themeIndex].problems[problemIndex].supportingData.splice(dataIndex, 1);
+                this.saveToStorage();
+                this.render();
+                this.showSuccess('Supporting data deleted!');
+            }
+
             updateDropdowns() {
                 // Update theme select
                 const themeSelect = document.getElementById('themeSelect');
@@ -2244,7 +2550,7 @@
                     themeSelect.appendChild(option);
                 });
 
-                // Update problem select
+                // Update problem select for experiments
                 const problemSelect = document.getElementById('problemSelect');
                 problemSelect.innerHTML = '<option value="">Select problem...</option>';
                 this.data.themes.forEach((theme, themeIndex) => {
@@ -2253,6 +2559,18 @@
                         option.value = `${themeIndex}-${problemIndex}`;
                         option.textContent = `${theme.name} > ${problem.name}`;
                         problemSelect.appendChild(option);
+                    });
+                });
+
+                // Update problem select for supporting data
+                const supportingProblemSelect = document.getElementById('supportingProblemSelect');
+                supportingProblemSelect.innerHTML = '<option value="">Select problem...</option>';
+                this.data.themes.forEach((theme, themeIndex) => {
+                    theme.problems.forEach((problem, problemIndex) => {
+                        const option = document.createElement('option');
+                        option.value = `${themeIndex}-${problemIndex}`;
+                        option.textContent = `${theme.name} > ${problem.name}`;
+                        supportingProblemSelect.appendChild(option);
                     });
                 });
             }
