@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experimentation Methodology Advisor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        label .hint {
+            font-weight: 400;
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        input[type="number"],
+        select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+
+        .results-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .results-panel.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .recommendation-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .recommendation-card.rank-1 {
+            border-left-color: #4CAF50;
+        }
+
+        .recommendation-card.rank-2 {
+            border-left-color: #2196F3;
+        }
+
+        .recommendation-card.rank-3 {
+            border-left-color: #FF9800;
+        }
+
+        .rec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .rec-title {
+            font-size: 1.3em;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .rec-score {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .rec-description {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .reason-list {
+            margin: 10px 0;
+        }
+
+        .reason-item {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .reason-item::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .reason-item.warning::before {
+            content: "⚠";
+            color: #FF9800;
+        }
+
+        .expandable {
+            margin-top: 15px;
+        }
+
+        .expandable-header {
+            background: #f0f0f0;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .expandable-header:hover {
+            background: #e0e0e0;
+        }
+
+        .expandable-header::after {
+            content: "▼";
+            font-size: 0.8em;
+            transition: transform 0.3s;
+        }
+
+        .expandable-header.expanded::after {
+            transform: rotate(180deg);
+        }
+
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .expandable-content.show {
+            max-height: 2000px;
+            padding: 15px;
+        }
+
+        .expandable-content ul {
+            margin-left: 20px;
+        }
+
+        .expandable-content li {
+            margin: 8px 0;
+        }
+
+        .secondary-recs {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        .secondary-recs h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .glossary {
+            background: #e8f4f8;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .glossary-grid {
+            display: grid;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .glossary-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .glossary-term {
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .disclaimer {
+            background: #fff3e0;
+            border-left: 5px solid #ff9800;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 6px;
+        }
+
+        .disclaimer h3 {
+            color: #e65100;
+            margin-bottom: 10px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border-left: 5px solid #0c5460;
+            color: #0c5460;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border-left: 5px solid #856404;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.5em;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Experimentation Methodology Advisor</h1>
+            <p>Find the right statistical approach for your A/B testing program</p>
+        </header>
+
+        <div class="main-content">
+            <div class="alert alert-info">
+                <strong>What this tool does:</strong> This advisor helps you choose an appropriate experimentation methodology based on your program constraints, traffic, risk tolerance, and organizational maturity. It provides ranked recommendations with transparent reasoning.
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Quick Start: Scenario Presets</h2>
+                <div class="preset-buttons">
+                    <button class="btn btn-secondary btn-small" onclick="loadPreset('startup')">Low-Traffic Startup</button>
+                    <button class="btn btn-secondary btn-small" onclick="loadPreset('enterprise')">High-Traffic Enterprise</button>
+                    <button class="btn btn-secondary btn-small" onclick="loadPreset('manyTests')">Many Concurrent Tests</button>
+                    <button class="btn btn-secondary btn-small" onclick="loadPreset('seasonal')">Seasonal E-commerce</button>
+                    <button class="btn btn-secondary btn-small" onclick="loadPreset('geo')">Geo-Constrained Rollout</button>
+                    <button class="btn btn-secondary btn-small" onclick="loadPreset('safety')">Safety Monitoring</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Traffic & Effect Size</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Monthly Sessions <span class="hint">(unique user sessions)</span></label>
+                        <input type="number" id="monthlySessions" value="100000" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Baseline Conversion Rate <span class="hint">(% of primary metric)</span></label>
+                        <input type="number" id="baselineConvRate" value="2.5" min="0.1" max="100" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label>Target MDE <span class="hint">(% relative lift to detect)</span></label>
+                        <input type="number" id="targetMDE" value="5" min="0.5" max="50" step="0.5">
+                    </div>
+                    <div class="input-group">
+                        <label>Metric Type</label>
+                        <select id="metricType">
+                            <option value="binary">Binary (conversion, yes/no)</option>
+                            <option value="continuous">Continuous (time, count)</option>
+                            <option value="revenue">Revenue / monetary</option>
+                            <option value="ratio">Ratio metric</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Time & Decision Constraints</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Max Test Duration <span class="hint">(days willing to wait)</span></label>
+                        <input type="number" id="maxDuration" value="14" min="1" max="90">
+                    </div>
+                    <div class="input-group">
+                        <label>Decision Speed Priority</label>
+                        <select id="speedPriority">
+                            <option value="low">Low (rigor over speed)</option>
+                            <option value="medium" selected>Medium (balanced)</option>
+                            <option value="high">High (fast decisions critical)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Concurrent Tests Running</label>
+                        <input type="number" id="concurrentTests" value="1" min="1" max="100">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Risk & Governance</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Primary Risk Tolerance</label>
+                        <select id="riskTolerance">
+                            <option value="fp_averse">Avoid False Positives (conservative)</option>
+                            <option value="balanced" selected>Balanced</option>
+                            <option value="fn_averse">Avoid False Negatives (aggressive)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Strict Type I Control Required <span class="hint">(regulatory/legal)</span></label>
+                        <select id="strictTypeI">
+                            <option value="no" selected>No</option>
+                            <option value="yes">Yes</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Stakeholder Bayesian Tolerance</label>
+                        <select id="bayesianTolerance">
+                            <option value="low">Low (prefer p-values)</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High (comfortable with probability)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Must Stop Early for Harm</label>
+                        <select id="earlyStopHarm">
+                            <option value="no" selected>No</option>
+                            <option value="yes">Yes</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Organizational Maturity</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Experimentation Maturity</label>
+                        <select id="orgMaturity">
+                            <option value="adhoc">Ad-hoc (just starting)</option>
+                            <option value="developing" selected>Developing (some process)</option>
+                            <option value="established">Established (regular testing)</option>
+                            <option value="advanced">Advanced (sophisticated program)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Engineering / Data Capacity</label>
+                        <select id="engCapacity">
+                            <option value="low">Low (limited resources)</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High (dedicated team)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Instrumentation Quality</label>
+                        <select id="instrumentation">
+                            <option value="none">None / Poor</option>
+                            <option value="basic" selected>Basic (tracking in place)</option>
+                            <option value="advanced">Advanced (pre-period data, covariates)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Validity Threats</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Repeated Looks / Peeking Expected</label>
+                        <select id="peeking">
+                            <option value="no" selected>No (analyze once at end)</option>
+                            <option value="yes">Yes (stakeholders will peek)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Interference Risk <span class="hint">(network effects)</span></label>
+                        <select id="interference">
+                            <option value="low" selected>Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Geo / Rollout Constraints <span class="hint">(can't randomize individuals)</span></label>
+                        <select id="geoConstraints">
+                            <option value="no" selected>No</option>
+                            <option value="yes">Yes</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Seasonality Strength</label>
+                        <select id="seasonality">
+                            <option value="low" selected>Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High (weekly/holiday patterns)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Pre-period Data Available <span class="hint">(for CUPED)</span></label>
+                        <select id="prePeriodData">
+                            <option value="no" selected>No</option>
+                            <option value="yes">Yes</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <button class="btn btn-primary" onclick="getRecommendation()" style="width: 100%; font-size: 1.1em;">
+                    Get Recommendation
+                </button>
+            </div>
+
+            <div id="resultsPanel" class="results-panel">
+                <!-- Results will be injected here -->
+            </div>
+
+            <div class="disclaimer">
+                <h3>Important Disclaimers</h3>
+                <p><strong>What this tool IS:</strong> A structured heuristic to narrow the methodology space and educate on tradeoffs.</p>
+                <p><strong>What this tool IS NOT:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Not a substitute for statistical expertise (complex scenarios need expert design)</li>
+                    <li>Not legal/medical advice (regulatory contexts have specific requirements)</li>
+                    <li>Not a guarantee of validity (correct methodology ≠ correct implementation)</li>
+                    <li>Not comprehensive (omits advanced niche methods)</li>
+                </ul>
+                <p style="margin-top: 10px;"><strong>Key Assumptions:</strong> I.I.D. by default, single primary metric, steady-state traffic, honest inputs, no novelty effects, U.S./tech context (alpha=0.05, power=0.80).</p>
+            </div>
+
+            <div class="glossary">
+                <h2 class="section-title">Glossary</h2>
+                <div class="glossary-grid">
+                    <div class="glossary-item">
+                        <div class="glossary-term">MDE (Minimum Detectable Effect)</div>
+                        <div>The smallest effect size you want to reliably detect. Smaller MDEs require exponentially more traffic.</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">Type I Error (False Positive)</div>
+                        <div>Concluding a variant is better when it's not. Controlled by alpha (typically 0.05 = 5% false positive rate).</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">Type II Error (False Negative)</div>
+                        <div>Failing to detect a real effect. Controlled by power (1-beta; typically 0.80 = 80% chance to detect real effect).</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">CUPED / CUPAC</div>
+                        <div>Variance reduction techniques using pre-period covariates. Can reduce required sample size by 20-50%.</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">Sequential Testing</div>
+                        <div>Methods that allow repeated looks at data without inflating false positive rate (e.g., alpha-spending, always-valid p-values).</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">FDR (False Discovery Rate)</div>
+                        <div>When running many tests, the expected proportion of false positives among all significant results. Benjamini-Hochberg controls this.</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">Interference</div>
+                        <div>When one user's treatment affects another user's outcome (e.g., network effects, marketplace dynamics). Violates independence assumption.</div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">SRM (Sample Ratio Mismatch)</div>
+                        <div>When observed traffic split differs from expected (e.g., 48/52 instead of 50/50). Indicates implementation bug or bias.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // METHOD DEFINITIONS
+        // ============================================
+
+        const METHODS = {
+            freqFixed: {
+                id: 'freqFixed',
+                name: 'Frequentist Fixed-Horizon A/B Test',
+                shortDesc: 'Classic NHST: run to predetermined sample size, analyze once',
+
+                constraints: (inputs) => {
+                    const reasons = [];
+
+                    // Traffic check
+                    const sessionsPerDay = inputs.monthlySessions / 30;
+                    const samplesNeeded = calculateSampleSize(inputs.baselineConvRate, inputs.targetMDE);
+                    const daysNeeded = (samplesNeeded * 2) / sessionsPerDay;
+
+                    if (daysNeeded > inputs.maxDuration * 2) {
+                        reasons.push(`Insufficient traffic: would need ${Math.round(daysNeeded)} days for target MDE, but max duration is ${inputs.maxDuration} days`);
+                    }
+
+                    if (inputs.peeking === 'yes' && inputs.strictTypeI === 'yes') {
+                        reasons.push('Peeking expected with strict Type I control required (use sequential instead)');
+                    }
+
+                    if (inputs.geoConstraints === 'yes') {
+                        reasons.push('Geo constraints prevent individual randomization');
+                    }
+
+                    if (inputs.interference === 'high') {
+                        reasons.push('High interference risk requires cluster randomization');
+                    }
+
+                    return { allowed: reasons.length === 0, reasons };
+                },
+
+                score: (inputs) => {
+                    let scores = { power: 0, speed: 0, risk: 0, implementation: 0, validity: 0 };
+                    let reasons = [];
+
+                    // Power/Feasibility (30%)
+                    const sessionsPerDay = inputs.monthlySessions / 30;
+                    const samplesNeeded = calculateSampleSize(inputs.baselineConvRate, inputs.targetMDE);
+                    const daysNeeded = (samplesNeeded * 2) / sessionsPerDay;
+
+                    if (daysNeeded <= inputs.maxDuration * 0.5) {
+                        scores.power = 100;
+                        reasons.push(`✓ Excellent power: can reach required sample size in ${Math.round(daysNeeded)} days`);
+                    } else if (daysNeeded <= inputs.maxDuration) {
+                        scores.power = 70;
+                        reasons.push(`✓ Adequate power: reaches sample size in ${Math.round(daysNeeded)} days`);
+                    } else {
+                        scores.power = 30;
+                        reasons.push(`⚠ Marginal power: needs ${Math.round(daysNeeded)} days (max allowed: ${inputs.maxDuration})`);
+                    }
+
+                    // Speed (20%)
+                    if (inputs.speedPriority === 'high') {
+                        scores.speed = 40;
+                        reasons.push('⚠ Not ideal for fast decisions (must wait for full sample)');
+                    } else if (inputs.speedPriority === 'medium') {
+                        scores.speed = 70;
+                    } else {
+                        scores.speed = 100;
+                        reasons.push('✓ Good fit for rigor-focused approach');
+                    }
+
+                    // Risk alignment (20%)
+                    if (inputs.riskTolerance === 'fp_averse' && inputs.strictTypeI === 'yes') {
+                        scores.risk = 100;
+                        reasons.push('✓ Provides exact Type I error control at alpha=0.05');
+                    } else if (inputs.riskTolerance === 'balanced') {
+                        scores.risk = 80;
+                    } else {
+                        scores.risk = 60;
+                    }
+
+                    // Implementation (15%)
+                    if (inputs.orgMaturity === 'adhoc' || inputs.orgMaturity === 'developing') {
+                        scores.implementation = 100;
+                        reasons.push('✓ Simple to implement; supported by all major platforms');
+                    } else {
+                        scores.implementation = 90;
+                    }
+
+                    // Validity (15%)
+                    if (inputs.peeking === 'yes') {
+                        scores.validity = 30;
+                        reasons.push('⚠ Peeking behavior will inflate false positive rate without correction');
+                    } else {
+                        scores.validity = 100;
+                        reasons.push('✓ Valid if analyzed once at predetermined sample size');
+                    }
+
+                    if (inputs.seasonality === 'high' && daysNeeded < 7) {
+                        reasons.push('⚠ High seasonality: ensure test runs full week(s)');
+                    }
+
+                    const total = (scores.power * 0.3 + scores.speed * 0.2 + scores.risk * 0.2 +
+                                   scores.implementation * 0.15 + scores.validity * 0.15);
+
+                    return { total, scores, reasons };
+                },
+
+                content: {
+                    whenGoodFit: [
+                        'Sufficient traffic to reach target power in acceptable time',
+                        'Stakeholders comfortable waiting for full duration',
+                        'No peeking or strict alpha correction applied',
+                        'Organization values strict Type I error control'
+                    ],
+                    whenRisky: [
+                        'Low traffic relative to MDE → tests take months',
+                        'Stakeholders will peek daily without correction',
+                        'Seasonal effects don\'t complete cycle within test duration',
+                        'Need to stop early for harm (not designed for monitoring)'
+                    ],
+                    implementationPitfalls: [
+                        'Peeking without alpha correction (p-hacking)',
+                        'Not pre-registering sample size',
+                        'Ignoring Sample Ratio Mismatch (SRM) checks',
+                        'Running multiple tests without FDR correction'
+                    ],
+                    dataNeeds: [
+                        'Randomization logs (who saw what, when)',
+                        'Primary metric instrumentation (accurate, complete)',
+                        'Sample size calculator with baseline rate, MDE, power, alpha',
+                        'SRM checks (chi-square test on assignment ratios)'
+                    ],
+                    maturityLevel: 'Developing → Advanced (works at all levels with platform support)',
+                    workflow: [
+                        'Define primary metric, MDE, alpha=0.05, power=0.80',
+                        'Calculate required sample size per variant',
+                        'Randomize 50/50, run until sample size reached',
+                        'Check SRM (sample ratio mismatch)',
+                        'Run two-sample t-test or proportion test',
+                        'If p < 0.05, reject null; else fail to reject'
+                    ]
+                }
+            },
+
+            bayesian: {
+                id: 'bayesian',
+                name: 'Bayesian A/B Test',
+                shortDesc: 'Posterior probability of improvement with flexible stopping',
+
+                constraints: (inputs) => {
+                    const reasons = [];
+
+                    if (inputs.bayesianTolerance === 'low') {
+                        reasons.push('Stakeholders not comfortable with Bayesian probability language');
+                    }
+
+                    if (inputs.strictTypeI === 'yes' && inputs.bayesianTolerance !== 'high') {
+                        reasons.push('Strict Type I control required but stakeholders not Bayesian-fluent (risk of misinterpretation)');
+                    }
+
+                    if (inputs.geoConstraints === 'yes') {
+                        reasons.push('Geo constraints prevent individual randomization');
+                    }
+
+                    if (inputs.interference === 'high') {
+                        reasons.push('High interference risk requires cluster randomization');
+                    }
+
+                    return { allowed: reasons.length === 0, reasons };
+                },
+
+                score: (inputs) => {
+                    let scores = { power: 0, speed: 0, risk: 0, implementation: 0, validity: 0 };
+                    let reasons = [];
+
+                    // Power (30%)
+                    const sessionsPerDay = inputs.monthlySessions / 30;
+                    const samplesNeeded = calculateSampleSize(inputs.baselineConvRate, inputs.targetMDE) * 0.9; // Bayesian often more efficient
+                    const daysNeeded = (samplesNeeded * 2) / sessionsPerDay;
+
+                    if (daysNeeded <= inputs.maxDuration * 0.7) {
+                        scores.power = 100;
+                        reasons.push(`✓ Can reach decision threshold in ~${Math.round(daysNeeded)} days`);
+                    } else if (daysNeeded <= inputs.maxDuration) {
+                        scores.power = 80;
+                    } else {
+                        scores.power = 40;
+                    }
+
+                    // Speed (20%)
+                    if (inputs.speedPriority === 'high') {
+                        scores.speed = 90;
+                        reasons.push('✓ Allows early stopping with posterior probability threshold');
+                    } else if (inputs.speedPriority === 'medium') {
+                        scores.speed = 85;
+                    } else {
+                        scores.speed = 70;
+                    }
+
+                    // Risk (20%)
+                    if (inputs.riskTolerance === 'fn_averse') {
+                        scores.risk = 100;
+                        reasons.push('✓ Excellent for minimizing false negatives (easier to act on signals)');
+                    } else if (inputs.riskTolerance === 'balanced') {
+                        scores.risk = 80;
+                    } else {
+                        scores.risk = 50;
+                        reasons.push('⚠ FP-averse users may find Bayesian approach too permissive');
+                    }
+
+                    // Implementation (15%)
+                    if (inputs.engCapacity === 'high' && inputs.orgMaturity === 'advanced') {
+                        scores.implementation = 90;
+                        reasons.push('✓ Organization has capacity for Bayesian implementation');
+                    } else if (inputs.engCapacity === 'medium' && inputs.orgMaturity !== 'adhoc') {
+                        scores.implementation = 70;
+                    } else {
+                        scores.implementation = 40;
+                        reasons.push('⚠ Requires Bayesian tooling and statistical expertise');
+                    }
+
+                    // Validity (15%)
+                    if (inputs.peeking === 'yes') {
+                        scores.validity = 90;
+                        reasons.push('✓ Handles continuous monitoring better than naive frequentist');
+                    } else {
+                        scores.validity = 85;
+                    }
+
+                    if (inputs.earlyStopHarm === 'yes') {
+                        scores.validity += 10;
+                        reasons.push('✓ Natural framework for safety monitoring');
+                    }
+
+                    const total = (scores.power * 0.3 + scores.speed * 0.2 + scores.risk * 0.2 +
+                                   scores.implementation * 0.15 + scores.validity * 0.15);
+
+                    return { total, scores, reasons };
+                },
+
+                content: {
+                    whenGoodFit: [
+                        'Need flexibility in stopping time',
+                        'Stakeholders understand probability language',
+                        'Want to minimize false negatives',
+                        'Continuous monitoring or safety checks required',
+                        'Can articulate reasonable priors'
+                    ],
+                    whenRisky: [
+                        'Regulatory requirement for exact alpha control',
+                        'Stakeholders confuse Bayesian credible intervals with frequentist confidence intervals',
+                        'Pressure to use strong informative priors without justification',
+                        'No statistical expertise to validate prior choices'
+                    ],
+                    implementationPitfalls: [
+                        'Using overly strong priors that dominate data',
+                        'Misinterpreting "95% probability variant is better" as frequentist guarantee',
+                        'Stopping too early based on weak evidence',
+                        'Not documenting prior choice rationale'
+                    ],
+                    dataNeeds: [
+                        'Same instrumentation as frequentist (randomization, metrics)',
+                        'Bayesian computation engine (MCMC or closed-form conjugate)',
+                        'Prior specification (weakly informative recommended)',
+                        'Decision threshold (e.g., P(B > A) > 0.95 to ship)'
+                    ],
+                    maturityLevel: 'Established → Advanced (requires statistical fluency)',
+                    workflow: [
+                        'Specify weakly informative prior (e.g., Beta for conversion rate)',
+                        'Randomize 50/50, collect data',
+                        'Update posterior continuously as data arrives',
+                        'Monitor P(variant > control) or credible interval',
+                        'Stop when posterior probability exceeds threshold (e.g., 0.95)',
+                        'Ship variant or continue collecting data'
+                    ]
+                }
+            },
+
+            sequential: {
+                id: 'sequential',
+                name: 'Sequential Testing (Group Sequential / Always-Valid)',
+                shortDesc: 'Designed for repeated looks with controlled Type I error',
+
+                constraints: (inputs) => {
+                    const reasons = [];
+
+                    if (inputs.geoConstraints === 'yes') {
+                        reasons.push('Geo constraints prevent individual randomization');
+                    }
+
+                    if (inputs.interference === 'high') {
+                        reasons.push('High interference risk requires cluster randomization');
+                    }
+
+                    if (inputs.engCapacity === 'low') {
+                        reasons.push('Sequential testing requires custom implementation or specialized platform');
+                    }
+
+                    return { allowed: reasons.length === 0, reasons };
+                },
+
+                score: (inputs) => {
+                    let scores = { power: 0, speed: 0, risk: 0, implementation: 0, validity: 0 };
+                    let reasons = [];
+
+                    // Power (30%)
+                    const sessionsPerDay = inputs.monthlySessions / 30;
+                    const samplesNeeded = calculateSampleSize(inputs.baselineConvRate, inputs.targetMDE);
+                    const daysNeeded = (samplesNeeded * 2) / sessionsPerDay;
+
+                    if (daysNeeded <= inputs.maxDuration * 0.6) {
+                        scores.power = 100;
+                        reasons.push(`✓ Can reach decision within ${Math.round(daysNeeded * 0.7)}-${Math.round(daysNeeded)} days`);
+                    } else if (daysNeeded <= inputs.maxDuration) {
+                        scores.power = 75;
+                    } else {
+                        scores.power = 35;
+                    }
+
+                    // Speed (20%)
+                    if (inputs.speedPriority === 'high') {
+                        scores.speed = 100;
+                        reasons.push('✓ Designed for early stopping while controlling alpha');
+                    } else if (inputs.speedPriority === 'medium') {
+                        scores.speed = 90;
+                    } else {
+                        scores.speed = 75;
+                    }
+
+                    // Risk (20%)
+                    if (inputs.strictTypeI === 'yes' && (inputs.peeking === 'yes' || inputs.earlyStopHarm === 'yes')) {
+                        scores.risk = 100;
+                        reasons.push('✓ Perfect fit: strict alpha control with continuous monitoring');
+                    } else if (inputs.riskTolerance === 'fp_averse') {
+                        scores.risk = 85;
+                    } else {
+                        scores.risk = 70;
+                    }
+
+                    // Implementation (15%)
+                    if (inputs.engCapacity === 'high' && inputs.orgMaturity === 'advanced') {
+                        scores.implementation = 80;
+                        reasons.push('✓ Organization can implement alpha-spending boundaries');
+                    } else if (inputs.engCapacity === 'medium') {
+                        scores.implementation = 60;
+                        reasons.push('⚠ Requires specialized knowledge or platform support');
+                    } else {
+                        scores.implementation = 30;
+                    }
+
+                    // Validity (15%)
+                    if (inputs.peeking === 'yes') {
+                        scores.validity = 100;
+                        reasons.push('✓ Explicitly designed for repeated looks');
+                    } else {
+                        scores.validity = 90;
+                    }
+
+                    if (inputs.earlyStopHarm === 'yes') {
+                        reasons.push('✓ Allows pre-planned interim analyses for safety');
+                    }
+
+                    const total = (scores.power * 0.3 + scores.speed * 0.2 + scores.risk * 0.2 +
+                                   scores.implementation * 0.15 + scores.validity * 0.15);
+
+                    return { total, scores, reasons };
+                },
+
+                content: {
+                    whenGoodFit: [
+                        'Need to peek at results continuously',
+                        'Must maintain strict Type I control with early stopping',
+                        'Safety monitoring required',
+                        'Want faster decisions than fixed-horizon without sacrificing rigor'
+                    ],
+                    whenRisky: [
+                        'No access to sequential testing tools or expertise',
+                        'Monitoring frequency uncertain or irregular',
+                        'Very low traffic (boundaries become impractical)',
+                        'Stakeholders don\'t understand alpha-spending concept'
+                    ],
+                    implementationPitfalls: [
+                        'Not pre-specifying number and timing of interim looks',
+                        'Using naive Bonferroni correction (too conservative)',
+                        'Ignoring correlation between sequential tests',
+                        'Misconfiguring alpha-spending function (e.g., O\'Brien-Fleming vs Pocock)'
+                    ],
+                    dataNeeds: [
+                        'Same as fixed-horizon (randomization, metrics, SRM)',
+                        'Alpha-spending calculator (compute boundaries)',
+                        'Monitoring schedule (when to look at data)',
+                        'Maximum sample size (for boundary computation)'
+                    ],
+                    maturityLevel: 'Established → Advanced (requires specialized implementation)',
+                    workflow: [
+                        'Define max sample size, alpha, power, number of looks',
+                        'Compute alpha-spending boundaries (e.g., O\'Brien-Fleming)',
+                        'Randomize and monitor at pre-planned intervals',
+                        'At each look, compare test statistic to boundary',
+                        'Stop for efficacy if crosses boundary; stop for futility if no chance of significance',
+                        'If reach max sample size, analyze with adjusted alpha'
+                    ]
+                }
+            },
+
+            cuped: {
+                id: 'cuped',
+                name: 'CUPED / CUPAC (Variance Reduction)',
+                shortDesc: 'Use pre-period covariates to reduce metric variance (pairs with other methods)',
+
+                constraints: (inputs) => {
+                    const reasons = [];
+
+                    if (inputs.prePeriodData === 'no') {
+                        reasons.push('No pre-period data available for covariates');
+                    }
+
+                    if (inputs.instrumentation === 'none') {
+                        reasons.push('Instrumentation too limited for covariate collection');
+                    }
+
+                    return { allowed: reasons.length === 0, reasons };
+                },
+
+                score: (inputs) => {
+                    let scores = { power: 0, speed: 0, risk: 0, implementation: 0, validity: 0 };
+                    let reasons = [];
+
+                    // This is a technique, not a standalone method, so scoring is about "boost value"
+
+                    // Power (30%)
+                    if (inputs.metricType === 'revenue' || inputs.metricType === 'continuous') {
+                        scores.power = 100;
+                        reasons.push('✓ Can reduce variance by 20-50% for revenue/continuous metrics');
+                    } else {
+                        scores.power = 70;
+                        reasons.push('✓ Can reduce variance by 10-30% for binary metrics');
+                    }
+
+                    // Speed (20%)
+                    scores.speed = 100;
+                    reasons.push('✓ Variance reduction → smaller sample size → faster tests');
+
+                    // Risk (20%)
+                    scores.risk = 85;
+                    reasons.push('✓ Maintains validity of underlying test method');
+
+                    // Implementation (15%)
+                    if (inputs.engCapacity === 'high' && inputs.instrumentation === 'advanced') {
+                        scores.implementation = 90;
+                        reasons.push('✓ Organization has covariate pipeline and expertise');
+                    } else if (inputs.engCapacity === 'medium') {
+                        scores.implementation = 60;
+                        reasons.push('⚠ Requires covariate computation infrastructure');
+                    } else {
+                        scores.implementation = 30;
+                    }
+
+                    // Validity (15%)
+                    scores.validity = 100;
+                    reasons.push('✓ Valid as long as covariates are pre-experiment and independent of treatment');
+
+                    const total = (scores.power * 0.3 + scores.speed * 0.2 + scores.risk * 0.2 +
+                                   scores.implementation * 0.15 + scores.validity * 0.15);
+
+                    return { total, scores, reasons };
+                },
+
+                content: {
+                    whenGoodFit: [
+                        'Pre-period data on users/units available',
+                        'High-variance metrics (revenue, time-on-site)',
+                        'Want to reduce required sample size without changing test philosophy',
+                        'Have engineering capacity for covariate pipeline'
+                    ],
+                    whenRisky: [
+                        'Covariates contaminated by treatment (leakage)',
+                        'Pre-period too short or unstable',
+                        'Implementation bugs in covariate calculation',
+                        'No validation of variance reduction achieved'
+                    ],
+                    implementationPitfalls: [
+                        'Using post-treatment covariates (invalidates adjustment)',
+                        'Overfitting with too many covariates (degrees of freedom loss)',
+                        'Not checking covariate balance across variants',
+                        'Forgetting to adjust standard errors for regression'
+                    ],
+                    dataNeeds: [
+                        'Pre-period metric values for each unit (e.g., 7-14 days before test)',
+                        'Regression infrastructure (OLS for CUPED)',
+                        'Covariate validation (balance checks, correlation with outcome)',
+                        'Pipeline to compute adjusted estimates and SEs'
+                    ],
+                    maturityLevel: 'Established → Advanced (not for beginners)',
+                    workflow: [
+                        'Collect pre-period metric Y_pre for each user',
+                        'Run experiment, collect experiment-period metric Y',
+                        'Regress Y on Y_pre to get coefficient θ',
+                        'Compute adjusted metric: Y_cuped = Y - θ(Y_pre - mean(Y_pre))',
+                        'Run standard test (t-test, etc.) on Y_cuped instead of Y',
+                        'Variance of Y_cuped is (1 - ρ²) × Var(Y), where ρ = correlation'
+                    ]
+                }
+            },
+
+            bandit: {
+                id: 'bandit',
+                name: 'Multi-Armed Bandit',
+                shortDesc: 'Optimize reward allocation in real-time (not for hypothesis testing)',
+
+                constraints: (inputs) => {
+                    const reasons = [];
+
+                    if (inputs.strictTypeI === 'yes') {
+                        reasons.push('Bandits do not provide Type I error control (optimizes reward, not inference)');
+                    }
+
+                    if (inputs.geoConstraints === 'yes') {
+                        reasons.push('Geo constraints complicate bandit allocation');
+                    }
+
+                    if (inputs.riskTolerance === 'fp_averse') {
+                        reasons.push('Bandits are not designed for conservative hypothesis testing');
+                    }
+
+                    return { allowed: reasons.length === 0, reasons };
+                },
+
+                score: (inputs) => {
+                    let scores = { power: 0, speed: 0, risk: 0, implementation: 0, validity: 0 };
+                    let reasons = [];
+
+                    // Power (30%) - N/A for bandits, they optimize regret not inference
+                    scores.power = 50;
+                    reasons.push('⚠ Bandits optimize cumulative reward, not statistical power');
+
+                    // Speed (20%)
+                    if (inputs.speedPriority === 'high') {
+                        scores.speed = 100;
+                        reasons.push('✓ Continuous optimization; no waiting for sample size');
+                    } else {
+                        scores.speed = 80;
+                    }
+
+                    // Risk (20%)
+                    if (inputs.riskTolerance === 'fn_averse' && inputs.strictTypeI === 'no') {
+                        scores.risk = 90;
+                        reasons.push('✓ Good for optimizing outcomes when inference is secondary');
+                    } else if (inputs.riskTolerance === 'balanced' && inputs.strictTypeI === 'no') {
+                        scores.risk = 60;
+                    } else {
+                        scores.risk = 20;
+                        reasons.push('⚠ Not suitable for conservative hypothesis testing');
+                    }
+
+                    // Implementation (15%)
+                    if (inputs.engCapacity === 'high' || inputs.orgMaturity === 'advanced') {
+                        scores.implementation = 80;
+                        reasons.push('✓ Can implement Thompson sampling or UCB');
+                    } else if (inputs.engCapacity === 'medium') {
+                        scores.implementation = 60;
+                    } else {
+                        scores.implementation = 30;
+                        reasons.push('⚠ Requires bandit algorithm and dynamic allocation');
+                    }
+
+                    // Validity (15%)
+                    scores.validity = 40;
+                    reasons.push('⚠ Valid for optimization, NOT for causal inference or p-values');
+                    if (inputs.speedPriority === 'high' && inputs.strictTypeI === 'no') {
+                        reasons.push('✓ If goal is to maximize short-term conversions, bandits excel');
+                    }
+
+                    const total = (scores.power * 0.3 + scores.speed * 0.2 + scores.risk * 0.2 +
+                                   scores.implementation * 0.15 + scores.validity * 0.15);
+
+                    return { total, scores, reasons };
+                },
+
+                content: {
+                    whenGoodFit: [
+                        'Primary goal is to maximize cumulative reward, not learn causal effects',
+                        'Fast iteration more important than statistical rigor',
+                        'Multiple variants to test simultaneously',
+                        'OK with not getting p-values or confidence intervals',
+                        'Short-term optimization horizon'
+                    ],
+                    whenRisky: [
+                        'Need hypothesis test conclusion (p-value, confidence interval)',
+                        'Regulatory or legal requirement for inference',
+                        'Long-term learning matters (bandits can prematurely abandon good variants)',
+                        'Complex metrics (bandits work best with immediate binary feedback)',
+                        'Stakeholders expect "statistical significance"'
+                    ],
+                    implementationPitfalls: [
+                        'Confusing optimization with hypothesis testing',
+                        'Not accounting for delayed conversions (bandits need fast feedback)',
+                        'Forgetting to explore (greedy allocation abandons losers too fast)',
+                        'Using bandits when you actually need effect size estimates',
+                        'No holdout for validation'
+                    ],
+                    dataNeeds: [
+                        'Real-time metric feedback (ideally immediate)',
+                        'Dynamic traffic allocation system',
+                        'Bandit algorithm (Thompson sampling, UCB, epsilon-greedy)',
+                        'Monitoring for catastrophic failure of a variant'
+                    ],
+                    maturityLevel: 'Established → Advanced (specialized use case)',
+                    workflow: [
+                        'Define reward metric (must be observable quickly)',
+                        'Initialize priors or counts for each variant',
+                        'For each user, select variant using bandit algorithm',
+                        'Observe reward, update posterior/counts',
+                        'Continuously reallocate traffic toward better variants',
+                        'Optional: use holdout set for unbiased final evaluation'
+                    ]
+                }
+            },
+
+            cluster: {
+                id: 'cluster',
+                name: 'Cluster / Geo Experiments',
+                shortDesc: 'Randomize groups (cities, stores, time periods) instead of individuals',
+
+                constraints: (inputs) => {
+                    const reasons = [];
+
+                    if (inputs.interference === 'low' && inputs.geoConstraints === 'no') {
+                        reasons.push('No interference or geo constraints → individual randomization preferred (more power)');
+                    }
+
+                    return { allowed: reasons.length === 0, reasons };
+                },
+
+                score: (inputs) => {
+                    let scores = { power: 0, speed: 0, risk: 0, implementation: 0, validity: 0 };
+                    let reasons = [];
+
+                    // Power (30%)
+                    // Cluster randomization has lower power due to ICC (intra-cluster correlation)
+                    if (inputs.monthlySessions > 1000000) {
+                        scores.power = 70;
+                        reasons.push('✓ High traffic can compensate for cluster design power loss');
+                    } else if (inputs.monthlySessions > 100000) {
+                        scores.power = 50;
+                        reasons.push('⚠ Moderate traffic; cluster randomization reduces power vs individual');
+                    } else {
+                        scores.power = 30;
+                        reasons.push('⚠ Low traffic + cluster design = very low power');
+                    }
+
+                    // Speed (20%)
+                    scores.speed = 40;
+                    reasons.push('⚠ Need sufficient clusters and time for balance; slower than individual randomization');
+
+                    // Risk (20%)
+                    if (inputs.riskTolerance === 'fp_averse') {
+                        scores.risk = 80;
+                        reasons.push('✓ Conservative approach; accounts for clustering');
+                    } else {
+                        scores.risk = 70;
+                    }
+
+                    // Implementation (15%)
+                    if (inputs.engCapacity === 'high' && inputs.orgMaturity === 'advanced') {
+                        scores.implementation = 80;
+                        reasons.push('✓ Can design cluster randomization with balance checks');
+                    } else if (inputs.engCapacity === 'medium') {
+                        scores.implementation = 50;
+                        reasons.push('⚠ Requires cluster-robust standard errors and design expertise');
+                    } else {
+                        scores.implementation = 30;
+                    }
+
+                    // Validity (15%)
+                    if (inputs.interference === 'high' || inputs.geoConstraints === 'yes') {
+                        scores.validity = 100;
+                        reasons.push('✓ Required when interference or geo constraints present');
+                    } else {
+                        scores.validity = 60;
+                    }
+
+                    const total = (scores.power * 0.3 + scores.speed * 0.2 + scores.risk * 0.2 +
+                                   scores.implementation * 0.15 + scores.validity * 0.15);
+
+                    return { total, scores, reasons };
+                },
+
+                content: {
+                    whenGoodFit: [
+                        'High interference / network effects (marketplaces, social networks)',
+                        'Cannot randomize individuals (geo rollout, retail stores)',
+                        'Two-sided platforms where treatment on one side affects other side',
+                        'Policy experiments (city-level interventions)'
+                    ],
+                    whenRisky: [
+                        'Very few clusters available (< 10 per arm)',
+                        'High within-cluster correlation (ICC > 0.3 drastically reduces power)',
+                        'Clusters very heterogeneous (hard to achieve balance)',
+                        'Low traffic per cluster (noisy estimates)'
+                    ],
+                    implementationPitfalls: [
+                        'Not accounting for clustering in standard errors (overstates significance)',
+                        'Too few clusters (randomization balance fails)',
+                        'Not checking covariate balance across treatment arms',
+                        'Ignoring time effects (if using time-based switching)'
+                    ],
+                    dataNeeds: [
+                        'Cluster definitions and assignments',
+                        'Pre-period cluster characteristics (for balance checks and CUPED)',
+                        'Cluster-robust standard errors or mixed effects models',
+                        'Sufficient number of clusters (ideally 20+ per arm)'
+                    ],
+                    maturityLevel: 'Established → Advanced (requires design expertise)',
+                    workflow: [
+                        'Define clusters (geos, stores, time periods)',
+                        'Collect pre-period data for balance and covariate adjustment',
+                        'Randomize clusters to treatment/control (stratified if possible)',
+                        'Check covariate balance across arms',
+                        'Run experiment for sufficient duration',
+                        'Analyze with cluster-robust SEs or mixed model with random cluster effects'
+                    ]
+                }
+            },
+
+            multipleTesting: {
+                id: 'multipleTesting',
+                name: 'Multiple Testing Correction (FDR Control)',
+                shortDesc: 'Adjust for running many tests simultaneously (pairs with other methods)',
+
+                constraints: (inputs) => {
+                    const reasons = [];
+
+                    if (inputs.concurrentTests <= 5) {
+                        reasons.push('Few concurrent tests (≤5); correction may not be critical unless very conservative');
+                    }
+
+                    return { allowed: reasons.length === 0, reasons };
+                },
+
+                score: (inputs) => {
+                    let scores = { power: 0, speed: 0, risk: 0, implementation: 0, validity: 0 };
+                    let reasons = [];
+
+                    // This is a technique, not a standalone method
+
+                    // Power (30%)
+                    if (inputs.concurrentTests <= 10) {
+                        scores.power = 90;
+                        reasons.push('✓ Moderate number of tests; power loss from correction is acceptable');
+                    } else if (inputs.concurrentTests <= 30) {
+                        scores.power = 75;
+                        reasons.push('⚠ Many tests; expect some power loss from FDR correction');
+                    } else {
+                        scores.power = 60;
+                        reasons.push('⚠ Very many tests (>30); significant power loss; consider hierarchical methods');
+                    }
+
+                    // Speed (20%)
+                    scores.speed = 85;
+                    reasons.push('✓ Correction applied post-hoc; does not slow individual tests');
+
+                    // Risk (20%)
+                    if (inputs.riskTolerance === 'fp_averse') {
+                        scores.risk = 100;
+                        reasons.push('✓ Essential for controlling false discoveries with many tests');
+                    } else {
+                        scores.risk = 80;
+                    }
+
+                    // Implementation (15%)
+                    if (inputs.engCapacity === 'medium' || inputs.engCapacity === 'high') {
+                        scores.implementation = 95;
+                        reasons.push('✓ Simple to implement (Benjamini-Hochberg procedure)');
+                    } else {
+                        scores.implementation = 70;
+                    }
+
+                    // Validity (15%)
+                    scores.validity = 100;
+                    reasons.push('✓ Maintains validity across multiple comparisons');
+
+                    const total = (scores.power * 0.3 + scores.speed * 0.2 + scores.risk * 0.2 +
+                                   scores.implementation * 0.15 + scores.validity * 0.15);
+
+                    return { total, scores, reasons };
+                },
+
+                content: {
+                    whenGoodFit: [
+                        'Running 10+ concurrent experiments',
+                        'Organization-wide experimentation platform',
+                        'Want to control false discovery rate',
+                        'Publishing results (academic or external)'
+                    ],
+                    whenRisky: [
+                        'Tests are not independent (overlapping user sets)',
+                        'Very low power to begin with (correction worsens it)',
+                        'Stakeholders don\'t understand why "significant" results are demoted',
+                        'Selective reporting (only showing "winners" defeats correction purpose)'
+                    ],
+                    implementationPitfalls: [
+                        'Forgetting to apply correction when running many tests',
+                        'Using overly conservative Bonferroni when FDR (BH) would suffice',
+                        'Not documenting how many tests were run (family-wise)',
+                        'Applying correction to exploratory analysis (sometimes OK to not correct)'
+                    ],
+                    dataNeeds: [
+                        'List of all concurrent p-values',
+                        'FDR correction procedure (Benjamini-Hochberg)',
+                        'Documentation of test family',
+                        'Clear policy on when correction is required'
+                    ],
+                    maturityLevel: 'Developing → Advanced (important at scale)',
+                    workflow: [
+                        'Run N experiments in parallel',
+                        'Collect p-values p1, p2, ..., pN',
+                        'Sort p-values in ascending order',
+                        'For each p(i), compare to (i/N) × α (e.g., α = 0.05)',
+                        'Find largest i where p(i) ≤ (i/N) × α',
+                        'Reject nulls for all tests 1 through i (controls FDR at α)'
+                    ]
+                }
+            }
+        };
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+
+        function calculateSampleSize(baselineRate, mdePercent) {
+            // Simplified sample size calculation for proportion test
+            // n ≈ 16 × (baseline × (1-baseline)) / (MDE²)
+            const p = baselineRate / 100;
+            const mde = (mdePercent / 100) * p; // absolute MDE
+            const variance = p * (1 - p);
+            const samplesPerVariant = Math.ceil(16 * variance / (mde * mde));
+            return samplesPerVariant;
+        }
+
+        function getInputs() {
+            return {
+                monthlySessions: parseInt(document.getElementById('monthlySessions').value) || 0,
+                baselineConvRate: parseFloat(document.getElementById('baselineConvRate').value) || 0,
+                targetMDE: parseFloat(document.getElementById('targetMDE').value) || 0,
+                metricType: document.getElementById('metricType').value,
+                maxDuration: parseInt(document.getElementById('maxDuration').value) || 0,
+                speedPriority: document.getElementById('speedPriority').value,
+                concurrentTests: parseInt(document.getElementById('concurrentTests').value) || 0,
+                riskTolerance: document.getElementById('riskTolerance').value,
+                strictTypeI: document.getElementById('strictTypeI').value,
+                bayesianTolerance: document.getElementById('bayesianTolerance').value,
+                earlyStopHarm: document.getElementById('earlyStopHarm').value,
+                orgMaturity: document.getElementById('orgMaturity').value,
+                engCapacity: document.getElementById('engCapacity').value,
+                instrumentation: document.getElementById('instrumentation').value,
+                peeking: document.getElementById('peeking').value,
+                interference: document.getElementById('interference').value,
+                geoConstraints: document.getElementById('geoConstraints').value,
+                seasonality: document.getElementById('seasonality').value,
+                prePeriodData: document.getElementById('prePeriodData').value
+            };
+        }
+
+        function setInputs(inputs) {
+            document.getElementById('monthlySessions').value = inputs.monthlySessions;
+            document.getElementById('baselineConvRate').value = inputs.baselineConvRate;
+            document.getElementById('targetMDE').value = inputs.targetMDE;
+            document.getElementById('metricType').value = inputs.metricType;
+            document.getElementById('maxDuration').value = inputs.maxDuration;
+            document.getElementById('speedPriority').value = inputs.speedPriority;
+            document.getElementById('concurrentTests').value = inputs.concurrentTests;
+            document.getElementById('riskTolerance').value = inputs.riskTolerance;
+            document.getElementById('strictTypeI').value = inputs.strictTypeI;
+            document.getElementById('bayesianTolerance').value = inputs.bayesianTolerance;
+            document.getElementById('earlyStopHarm').value = inputs.earlyStopHarm;
+            document.getElementById('orgMaturity').value = inputs.orgMaturity;
+            document.getElementById('engCapacity').value = inputs.engCapacity;
+            document.getElementById('instrumentation').value = inputs.instrumentation;
+            document.getElementById('peeking').value = inputs.peeking;
+            document.getElementById('interference').value = inputs.interference;
+            document.getElementById('geoConstraints').value = inputs.geoConstraints;
+            document.getElementById('seasonality').value = inputs.seasonality;
+            document.getElementById('prePeriodData').value = inputs.prePeriodData;
+        }
+
+        // ============================================
+        // PRESET SCENARIOS
+        // ============================================
+
+        const PRESETS = {
+            startup: {
+                monthlySessions: 10000,
+                baselineConvRate: 2.0,
+                targetMDE: 10,
+                metricType: 'binary',
+                maxDuration: 21,
+                speedPriority: 'medium',
+                concurrentTests: 2,
+                riskTolerance: 'balanced',
+                strictTypeI: 'no',
+                bayesianTolerance: 'medium',
+                earlyStopHarm: 'no',
+                orgMaturity: 'developing',
+                engCapacity: 'low',
+                instrumentation: 'basic',
+                peeking: 'yes',
+                interference: 'low',
+                geoConstraints: 'no',
+                seasonality: 'low',
+                prePeriodData: 'no'
+            },
+            enterprise: {
+                monthlySessions: 5000000,
+                baselineConvRate: 3.5,
+                targetMDE: 2,
+                metricType: 'binary',
+                maxDuration: 14,
+                speedPriority: 'medium',
+                concurrentTests: 50,
+                riskTolerance: 'fp_averse',
+                strictTypeI: 'yes',
+                bayesianTolerance: 'medium',
+                earlyStopHarm: 'no',
+                orgMaturity: 'advanced',
+                engCapacity: 'high',
+                instrumentation: 'advanced',
+                peeking: 'no',
+                interference: 'low',
+                geoConstraints: 'no',
+                seasonality: 'medium',
+                prePeriodData: 'yes'
+            },
+            manyTests: {
+                monthlySessions: 1000000,
+                baselineConvRate: 5.0,
+                targetMDE: 3,
+                metricType: 'binary',
+                maxDuration: 14,
+                speedPriority: 'high',
+                concurrentTests: 80,
+                riskTolerance: 'balanced',
+                strictTypeI: 'no',
+                bayesianTolerance: 'high',
+                earlyStopHarm: 'no',
+                orgMaturity: 'advanced',
+                engCapacity: 'high',
+                instrumentation: 'advanced',
+                peeking: 'yes',
+                interference: 'low',
+                geoConstraints: 'no',
+                seasonality: 'low',
+                prePeriodData: 'yes'
+            },
+            seasonal: {
+                monthlySessions: 500000,
+                baselineConvRate: 4.0,
+                targetMDE: 5,
+                metricType: 'revenue',
+                maxDuration: 21,
+                speedPriority: 'low',
+                concurrentTests: 5,
+                riskTolerance: 'fp_averse',
+                strictTypeI: 'no',
+                bayesianTolerance: 'low',
+                earlyStopHarm: 'no',
+                orgMaturity: 'established',
+                engCapacity: 'medium',
+                instrumentation: 'advanced',
+                peeking: 'no',
+                interference: 'low',
+                geoConstraints: 'no',
+                seasonality: 'high',
+                prePeriodData: 'yes'
+            },
+            geo: {
+                monthlySessions: 300000,
+                baselineConvRate: 3.0,
+                targetMDE: 8,
+                metricType: 'binary',
+                maxDuration: 28,
+                speedPriority: 'low',
+                concurrentTests: 1,
+                riskTolerance: 'balanced',
+                strictTypeI: 'no',
+                bayesianTolerance: 'medium',
+                earlyStopHarm: 'no',
+                orgMaturity: 'established',
+                engCapacity: 'medium',
+                instrumentation: 'basic',
+                peeking: 'no',
+                interference: 'low',
+                geoConstraints: 'yes',
+                seasonality: 'medium',
+                prePeriodData: 'yes'
+            },
+            safety: {
+                monthlySessions: 200000,
+                baselineConvRate: 2.5,
+                targetMDE: 5,
+                metricType: 'binary',
+                maxDuration: 14,
+                speedPriority: 'high',
+                concurrentTests: 1,
+                riskTolerance: 'fp_averse',
+                strictTypeI: 'yes',
+                bayesianTolerance: 'medium',
+                earlyStopHarm: 'yes',
+                orgMaturity: 'established',
+                engCapacity: 'high',
+                instrumentation: 'advanced',
+                peeking: 'yes',
+                interference: 'low',
+                geoConstraints: 'no',
+                seasonality: 'low',
+                prePeriodData: 'no'
+            }
+        };
+
+        function loadPreset(presetName) {
+            setInputs(PRESETS[presetName]);
+        }
+
+        // ============================================
+        // RECOMMENDATION ENGINE
+        // ============================================
+
+        function getRecommendation() {
+            const inputs = getInputs();
+
+            // 1. Filter methods by constraints
+            const allowedMethods = [];
+            const excludedMethods = [];
+
+            for (const [key, method] of Object.entries(METHODS)) {
+                const constraintResult = method.constraints(inputs);
+                if (constraintResult.allowed) {
+                    allowedMethods.push(method);
+                } else {
+                    excludedMethods.push({ method, reasons: constraintResult.reasons });
+                }
+            }
+
+            // 2. Score allowed methods
+            const scoredMethods = allowedMethods.map(method => {
+                const scoreResult = method.score(inputs);
+                return {
+                    method,
+                    score: scoreResult.total,
+                    scoreBreakdown: scoreResult.scores,
+                    reasons: scoreResult.reasons
+                };
+            });
+
+            // 3. Sort by score
+            scoredMethods.sort((a, b) => b.score - a.score);
+
+            // 4. Determine secondary recommendations
+            const secondary = [];
+
+            // CUPED recommendation
+            if (inputs.prePeriodData === 'yes' && inputs.instrumentation === 'advanced' &&
+                !scoredMethods.find(s => s.method.id === 'cuped')) {
+                secondary.push({
+                    name: 'CUPED / CUPAC',
+                    description: 'Use CUPED with your chosen primary method to reduce variance by 20-50%'
+                });
+            }
+
+            // Multiple testing correction
+            if (inputs.concurrentTests > 10 && !scoredMethods.find(s => s.method.id === 'multipleTesting')) {
+                secondary.push({
+                    name: 'Multiple Testing Correction (FDR)',
+                    description: `With ${inputs.concurrentTests} concurrent tests, apply Benjamini-Hochberg FDR correction to control false discoveries`
+                });
+            }
+
+            // Render results
+            renderResults(scoredMethods.slice(0, 3), secondary, excludedMethods, inputs);
+        }
+
+        // ============================================
+        // RESULTS RENDERING
+        // ============================================
+
+        function renderResults(topMethods, secondary, excluded, inputs) {
+            const panel = document.getElementById('resultsPanel');
+
+            if (topMethods.length === 0) {
+                panel.innerHTML = `
+                    <div class="alert alert-warning">
+                        <strong>No methods meet your constraints.</strong> Consider relaxing requirements or consulting a statistician for custom design.
+                    </div>
+                `;
+                panel.classList.add('show');
+                return;
+            }
+
+            let html = '<h2 class="section-title">Recommended Methodologies</h2>';
+
+            // Top recommendations
+            topMethods.forEach((scored, index) => {
+                const rank = index + 1;
+                const method = scored.method;
+
+                html += `
+                    <div class="recommendation-card rank-${rank}">
+                        <div class="rec-header">
+                            <div class="rec-title">#${rank} ${method.name}</div>
+                            <div class="rec-score">Score: ${Math.round(scored.score)}/100</div>
+                        </div>
+                        <div class="rec-description">${method.shortDesc}</div>
+
+                        <div class="reason-list">
+                            <strong>Why this method scored well:</strong>
+                            ${scored.reasons.map(r => `<div class="reason-item ${r.startsWith('⚠') ? 'warning' : ''}">${r}</div>`).join('')}
+                        </div>
+
+                        <div class="expandable">
+                            <div class="expandable-header" onclick="toggleExpandable(this)">
+                                <strong>When This Is a Good Fit</strong>
+                            </div>
+                            <div class="expandable-content">
+                                <ul>
+                                    ${method.content.whenGoodFit.map(item => `<li>${item}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="expandable">
+                            <div class="expandable-header" onclick="toggleExpandable(this)">
+                                <strong>When This Is Risky</strong>
+                            </div>
+                            <div class="expandable-content">
+                                <ul>
+                                    ${method.content.whenRisky.map(item => `<li>${item}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="expandable">
+                            <div class="expandable-header" onclick="toggleExpandable(this)">
+                                <strong>Implementation Pitfalls</strong>
+                            </div>
+                            <div class="expandable-content">
+                                <ul>
+                                    ${method.content.implementationPitfalls.map(item => `<li>${item}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="expandable">
+                            <div class="expandable-header" onclick="toggleExpandable(this)">
+                                <strong>Data & Instrumentation Needs</strong>
+                            </div>
+                            <div class="expandable-content">
+                                <ul>
+                                    ${method.content.dataNeeds.map(item => `<li>${item}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="expandable">
+                            <div class="expandable-header" onclick="toggleExpandable(this)">
+                                <strong>Minimal Workflow</strong>
+                            </div>
+                            <div class="expandable-content">
+                                <p><strong>Maturity Level Required:</strong> ${method.content.maturityLevel}</p>
+                                <ol>
+                                    ${method.content.workflow.map(step => `<li>${step}</li>`).join('')}
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Secondary recommendations
+            if (secondary.length > 0) {
+                html += `
+                    <div class="secondary-recs">
+                        <h4>Secondary Recommendations (Combine with Primary)</h4>
+                        <ul>
+                            ${secondary.map(s => `<li><strong>${s.name}:</strong> ${s.description}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Action buttons
+            html += `
+                <div class="action-buttons">
+                    <button class="btn btn-primary btn-small" onclick="copySummary()">📋 Copy Summary</button>
+                    <button class="btn btn-secondary btn-small" onclick="downloadJSON()">💾 Download JSON</button>
+                </div>
+            `;
+
+            // Excluded methods
+            if (excluded.length > 0) {
+                html += `
+                    <div class="expandable" style="margin-top: 30px;">
+                        <div class="expandable-header" onclick="toggleExpandable(this)">
+                            <strong>Why Other Methods Were Excluded (${excluded.length})</strong>
+                        </div>
+                        <div class="expandable-content">
+                            ${excluded.map(e => `
+                                <div style="margin-bottom: 15px;">
+                                    <strong>${e.method.name}:</strong>
+                                    <ul style="margin-top: 5px;">
+                                        ${e.reasons.map(r => `<li>${r}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            panel.innerHTML = html;
+            panel.classList.add('show');
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function toggleExpandable(header) {
+            header.classList.toggle('expanded');
+            const content = header.nextElementSibling;
+            content.classList.toggle('show');
+        }
+
+        // ============================================
+        // UTILITY ACTIONS
+        // ============================================
+
+        function copySummary() {
+            const inputs = getInputs();
+            const panel = document.getElementById('resultsPanel');
+
+            let summary = '=== EXPERIMENTATION METHODOLOGY RECOMMENDATION ===\n\n';
+            summary += 'INPUT PARAMETERS:\n';
+            summary += `- Monthly Sessions: ${inputs.monthlySessions.toLocaleString()}\n`;
+            summary += `- Baseline Conversion Rate: ${inputs.baselineConvRate}%\n`;
+            summary += `- Target MDE: ${inputs.targetMDE}%\n`;
+            summary += `- Max Test Duration: ${inputs.maxDuration} days\n`;
+            summary += `- Concurrent Tests: ${inputs.concurrentTests}\n`;
+            summary += `- Risk Tolerance: ${inputs.riskTolerance}\n`;
+            summary += `- Org Maturity: ${inputs.orgMaturity}\n\n`;
+
+            const cards = panel.querySelectorAll('.recommendation-card');
+            summary += 'TOP RECOMMENDATIONS:\n\n';
+            cards.forEach((card, i) => {
+                const title = card.querySelector('.rec-title').textContent;
+                const score = card.querySelector('.rec-score').textContent;
+                const desc = card.querySelector('.rec-description').textContent;
+                summary += `${title} (${score})\n${desc}\n\n`;
+            });
+
+            navigator.clipboard.writeText(summary).then(() => {
+                alert('Summary copied to clipboard!');
+            });
+        }
+
+        function downloadJSON() {
+            const inputs = getInputs();
+            const panel = document.getElementById('resultsPanel');
+
+            const data = {
+                timestamp: new Date().toISOString(),
+                inputs: inputs,
+                recommendations: Array.from(panel.querySelectorAll('.recommendation-card')).map(card => ({
+                    title: card.querySelector('.rec-title').textContent,
+                    score: card.querySelector('.rec-score').textContent,
+                    description: card.querySelector('.rec-description').textContent
+                }))
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'experimentation-recommendation.json';
+            a.click();
+        }
+    </script>
+</body>
+</html>
