@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRO ROI Model — Post-Experiment Revenue Projections</title>
+    <title>Speero — Post-Experiment ROI Model</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -486,7 +486,7 @@
 <div class="app">
     <header>
         <div>
-            <div class="logo">ROI <span>Model</span></div>
+            <div class="logo"><span>Speero</span> ROI Model</div>
             <div class="header-sub">Post-Experiment Revenue Projections</div>
         </div>
     </header>
@@ -502,19 +502,29 @@
                     <label>Experiment Name <span class="hint">(optional, for labeling)</span></label>
                     <input type="text" id="expName" placeholder="e.g., Homepage CTA Redesign">
                 </div>
+                <div class="field">
+                    <label>Test Duration <span class="hint">(days)</span></label>
+                    <input type="number" id="testDuration" placeholder="28" min="1" step="1">
+                </div>
                 <div class="row-2">
                     <div class="field">
-                        <label>Test Duration <span class="hint">(days)</span></label>
-                        <input type="number" id="testDuration" placeholder="28" min="1" step="1">
+                        <label>Control Traffic</label>
+                        <input type="number" id="controlTraffic" placeholder="25000" min="1" step="1">
                     </div>
                     <div class="field">
-                        <label>Total Traffic</label>
-                        <input type="number" id="totalTraffic" placeholder="50000" min="1" step="1">
+                        <label>Variation Traffic</label>
+                        <input type="number" id="variationTraffic" placeholder="25000" min="1" step="1">
                     </div>
                 </div>
-                <div class="field">
-                    <label>Variations <span class="hint">(including control)</span></label>
-                    <input type="number" id="numVariations" value="2" min="2" max="10" step="1">
+                <div class="derived" id="trafficDerived">
+                    <div class="d-item">
+                        <div class="d-label">Total Traffic</div>
+                        <div class="d-value" id="totalTrafficDerived">—</div>
+                    </div>
+                    <div class="d-item">
+                        <div class="d-label">Daily Total Traffic</div>
+                        <div class="d-value" id="dailyTrafficDerived">—</div>
+                    </div>
                 </div>
             </div>
 
@@ -540,10 +550,6 @@
                         <div class="d-label">Relative Lift</div>
                         <div class="d-value" id="relLift">—</div>
                     </div>
-                    <div class="d-item">
-                        <div class="d-label">Daily Traffic (100%)</div>
-                        <div class="d-value" id="dailyTraffic">—</div>
-                    </div>
                 </div>
             </div>
 
@@ -551,14 +557,14 @@
             <div class="card">
                 <div class="card-title">Revenue Attribution</div>
                 <div class="toggle-group" id="revModelToggle">
-                    <button class="toggle-btn active" data-model="aov">Ecommerce AOV</button>
+                    <button class="toggle-btn" data-model="aov">Ecommerce AOV</button>
                     <button class="toggle-btn" data-model="arpa">SaaS ARPA / ARR</button>
-                    <button class="toggle-btn" data-model="rpc">Rev per Conversion</button>
+                    <button class="toggle-btn active" data-model="rpc">Rev per Conversion</button>
                     <button class="toggle-btn" data-model="ltv">Lifetime Value</button>
                 </div>
 
                 <!-- AOV fields -->
-                <div class="rev-fields" id="fields-aov">
+                <div class="rev-fields hidden" id="fields-aov">
                     <div class="field">
                         <label>Average Order Value <span class="hint">($)</span></label>
                         <input type="number" id="aov" placeholder="80" min="0" step="0.01">
@@ -581,7 +587,7 @@
                 </div>
 
                 <!-- Revenue per Conversion fields -->
-                <div class="rev-fields hidden" id="fields-rpc">
+                <div class="rev-fields" id="fields-rpc">
                     <div class="field">
                         <label>Revenue per Conversion <span class="hint">($)</span></label>
                         <input type="number" id="rpc" placeholder="50" min="0" step="0.01">
@@ -624,11 +630,11 @@
 
                     <!-- Qualification rate -->
                     <div class="field">
-                        <label>Sales Qualification Rate <span class="hint">(%)</span></label>
+                        <label>Sales Qualification Rate <span class="hint">(%) — defaults to 100%</span></label>
                         <input type="number" id="qualRate" value="100" min="0" max="100" step="1">
                     </div>
                     <div class="edu-note">
-                        For lead-gen or SaaS funnels where a "conversion" is an MQL/SQL, not a closed deal. This rate is applied to revenue calculations only — conversion counts remain unaffected.
+                        Set to 100% for most use cases (ecommerce, direct purchases). Only adjust this if your experiment's conversion event is a lead or signup that requires a downstream sales step to become revenue — for example, lead-gen or SaaS funnels where a "conversion" is an MQL/SQL, not a closed deal. If 20% of your leads typically close, set this to 20%. This rate is applied to revenue calculations only — conversion counts remain unaffected.
                     </div>
 
                     <div class="edu-note" style="margin-top:12px">
@@ -759,13 +765,12 @@ const CalcEngine = {
     compute(inputs) {
         const {
             testDuration,
-            totalTraffic,
-            numVariations,
-            controlCR,   // as decimal, e.g., 0.032
-            winnerCR,     // as decimal
+            totalTraffic,   // controlTraffic + variationTraffic
+            controlCR,      // as decimal, e.g., 0.032
+            winnerCR,       // as decimal
             revenuePerConversion,  // single scalar $
-            decayRate,    // as decimal, e.g., 0.30
-            qualRate,     // as decimal, e.g., 1.0
+            decayRate,      // as decimal, e.g., 0.30
+            qualRate,       // as decimal, e.g., 1.0
         } = inputs;
 
         // Step 1: Normalize to daily full-traffic
@@ -964,7 +969,7 @@ function formatCompact(n) {
 const UI = {
 
     state: {
-        revenueModel: 'aov',
+        revenueModel: 'rpc',
         billingPeriod: 'monthly',
         decayRate: 0,
     },
@@ -976,8 +981,10 @@ const UI = {
         this.els = {
             expName: document.getElementById('expName'),
             testDuration: document.getElementById('testDuration'),
-            totalTraffic: document.getElementById('totalTraffic'),
-            numVariations: document.getElementById('numVariations'),
+            controlTraffic: document.getElementById('controlTraffic'),
+            variationTraffic: document.getElementById('variationTraffic'),
+            totalTrafficDerived: document.getElementById('totalTrafficDerived'),
+            dailyTrafficDerived: document.getElementById('dailyTrafficDerived'),
             controlCR: document.getElementById('controlCR'),
             winnerCR: document.getElementById('winnerCR'),
             aov: document.getElementById('aov'),
@@ -989,7 +996,6 @@ const UI = {
             decayValueLabel: document.getElementById('decayValueLabel'),
             absLift: document.getElementById('absLift'),
             relLift: document.getElementById('relLift'),
-            dailyTraffic: document.getElementById('dailyTraffic'),
             emptyState: document.getElementById('emptyState'),
             outputContent: document.getElementById('outputContent'),
         };
@@ -1068,7 +1074,7 @@ const UI = {
 
     bindInputListeners() {
         const inputs = [
-            'testDuration', 'totalTraffic', 'numVariations',
+            'testDuration', 'controlTraffic', 'variationTraffic',
             'controlCR', 'winnerCR',
             'aov', 'arpa', 'rpc', 'ltv', 'qualRate'
         ];
@@ -1106,14 +1112,25 @@ const UI = {
 
     isReady() {
         const d = parseFloat(this.els.testDuration.value);
-        const t = parseFloat(this.els.totalTraffic.value);
+        const ct = parseFloat(this.els.controlTraffic.value);
+        const vt = parseFloat(this.els.variationTraffic.value);
         const c = parseFloat(this.els.controlCR.value);
         const w = parseFloat(this.els.winnerCR.value);
         const r = this.getRevenuePerConversion();
-        return d > 0 && t > 0 && c >= 0 && w >= 0 && r > 0 && w > c;
+        return d > 0 && ct > 0 && vt > 0 && c >= 0 && w >= 0 && r > 0 && w > c;
     },
 
     recalculate() {
+        // Update derived traffic values always
+        const controlTraffic = parseFloat(this.els.controlTraffic.value) || 0;
+        const variationTraffic = parseFloat(this.els.variationTraffic.value) || 0;
+        const totalTraffic = controlTraffic + variationTraffic;
+        const testDuration = parseFloat(this.els.testDuration.value) || 0;
+        const dailyTraffic = testDuration > 0 ? Math.round(totalTraffic / testDuration) : 0;
+
+        this.els.totalTrafficDerived.textContent = totalTraffic > 0 ? totalTraffic.toLocaleString() : '—';
+        this.els.dailyTrafficDerived.textContent = dailyTraffic > 0 ? dailyTraffic.toLocaleString() : '—';
+
         // Update derived lift values always
         const controlCR = (parseFloat(this.els.controlCR.value) || 0) / 100;
         const winnerCR = (parseFloat(this.els.winnerCR.value) || 0) / 100;
@@ -1121,11 +1138,6 @@ const UI = {
         const relLift = controlCR > 0 ? absLift / controlCR : 0;
         this.els.absLift.textContent = absLift !== 0 ? (absLift * 100).toFixed(2) + ' pp' : '—';
         this.els.relLift.textContent = relLift !== 0 ? (relLift * 100).toFixed(2) + '%' : '—';
-
-        const testDuration = parseFloat(this.els.testDuration.value) || 0;
-        const totalTraffic = parseFloat(this.els.totalTraffic.value) || 0;
-        const dailyTraffic = testDuration > 0 ? Math.round(totalTraffic / testDuration) : 0;
-        this.els.dailyTraffic.textContent = dailyTraffic > 0 ? dailyTraffic.toLocaleString() : '—';
 
         if (!this.isReady()) {
             this.els.emptyState.classList.remove('hidden');
@@ -1137,9 +1149,8 @@ const UI = {
         this.els.outputContent.classList.remove('hidden');
 
         const inputs = {
-            testDuration: parseFloat(this.els.testDuration.value),
-            totalTraffic: parseFloat(this.els.totalTraffic.value),
-            numVariations: parseFloat(this.els.numVariations.value) || 2,
+            testDuration: testDuration,
+            totalTraffic: totalTraffic,
             controlCR: controlCR,
             winnerCR: winnerCR,
             revenuePerConversion: this.getRevenuePerConversion(),
