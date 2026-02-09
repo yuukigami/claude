@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRO ROI Model — Post-Experiment Revenue Projections</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #0f0f1a;
+            --bg-card: #232342;
+            --bg-hover: #2a2a4a;
+            --bg-input: #1e1e3a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #6b6b7b;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --accent-muted: #4f46e5;
+            --border: #3d3d5c;
+            --border-light: #4d4d6c;
+            --success: #10b981;
+            --success-muted: rgba(16, 185, 129, 0.15);
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --warning-muted: rgba(245, 158, 11, 0.15);
+            --chart-decay: #6366f1;
+            --chart-no-decay: #10b981;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .app {
+            max-width: 1360px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .logo { font-size: 1.4rem; font-weight: 700; }
+        .logo span { color: var(--accent); }
+        .header-sub { font-size: 0.8rem; color: var(--text-secondary); }
+
+        /* Layout: two-column */
+        .layout {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        @media (max-width: 960px) {
+            .layout { grid-template-columns: 1fr; }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        /* Form elements */
+        .field { margin-bottom: 14px; }
+        .field:last-child { margin-bottom: 0; }
+        .field label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+        .field label .hint {
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+        }
+        .field input[type="text"],
+        .field input[type="number"] {
+            width: 100%;
+            padding: 9px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .field input:focus {
+            border-color: var(--accent);
+        }
+        .field input::placeholder {
+            color: var(--text-muted);
+        }
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Derived values inline */
+        .derived {
+            display: flex;
+            gap: 16px;
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: rgba(99, 102, 241, 0.08);
+            border-radius: 8px;
+            font-size: 0.78rem;
+        }
+        .derived .d-item { flex: 1; }
+        .derived .d-label { color: var(--text-muted); font-size: 0.7rem; }
+        .derived .d-value { color: var(--accent-hover); font-weight: 600; font-size: 0.9rem; }
+
+        /* Revenue model toggle */
+        .toggle-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .toggle-btn {
+            padding: 8px 6px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+        .toggle-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .toggle-btn.active {
+            background: var(--accent-muted);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        /* Billing period toggle for ARPA */
+        .billing-toggle {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .billing-btn {
+            flex: 1;
+            padding: 6px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.72rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+        .billing-btn:hover { border-color: var(--accent); }
+        .billing-btn.active {
+            background: var(--accent-muted);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        /* Advanced section */
+        .advanced-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+            user-select: none;
+        }
+        .advanced-toggle:hover { color: var(--text-primary); }
+        .advanced-toggle .arrow {
+            transition: transform 0.2s;
+            font-size: 0.65rem;
+        }
+        .advanced-toggle .arrow.open { transform: rotate(90deg); }
+        .advanced-body { display: none; }
+        .advanced-body.open { display: block; }
+
+        /* Decay slider */
+        .decay-control { margin-bottom: 14px; }
+        .decay-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .decay-value {
+            font-weight: 600;
+            color: var(--accent-hover);
+            font-size: 0.9rem;
+        }
+        .decay-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: var(--bg-input);
+            border-radius: 3px;
+            outline: none;
+        }
+        .decay-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: 2px solid var(--bg-card);
+        }
+        .decay-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: 2px solid var(--bg-card);
+        }
+        .decay-presets {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .preset-btn {
+            flex: 1;
+            padding: 5px 4px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.65rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+        .preset-btn:hover { border-color: var(--accent); color: var(--text-secondary); }
+        .preset-btn.active { border-color: var(--accent); color: var(--accent-hover); background: rgba(99,102,241,0.1); }
+
+        .edu-note {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 6px;
+            border-left: 3px solid var(--accent-muted);
+        }
+
+        /* ========= OUTPUT ZONE ========= */
+        .output-zone { min-width: 0; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+        .empty-state p { font-size: 0.85rem; }
+
+        /* Headline metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 760px) {
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .metric-label {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
+        }
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .metric-value.accent { color: var(--accent-hover); }
+        .metric-value.success { color: var(--success); }
+        .metric-sub {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Inline explainer */
+        .explainer {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+            padding: 14px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        /* Table */
+        .table-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        .table-wrap th {
+            background: var(--bg-tertiary);
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+        .table-wrap td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+        .table-wrap tr:last-child td { border-bottom: none; }
+        .table-wrap tr:hover td { background: var(--bg-hover); }
+        .td-period { font-weight: 500; }
+        .td-money { color: var(--success); font-weight: 600; }
+        .td-lift { color: var(--accent-hover); }
+
+        /* Chart containers */
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .chart-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .chart-subtitle {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+        canvas {
+            width: 100% !important;
+            height: 260px !important;
+            display: block;
+        }
+        .chart-legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 12px;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-swatch {
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+        }
+        .legend-swatch.dashed {
+            background: repeating-linear-gradient(90deg, var(--chart-no-decay) 0 6px, transparent 6px 10px);
+        }
+
+        /* Plain-language summary */
+        .summary-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .summary-card .summary-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .summary-card .summary-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        .summary-card .summary-text strong {
+            color: var(--text-primary);
+        }
+
+        /* Assumptions footer */
+        .assumptions {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            padding: 14px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+        .assumptions summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .assumptions ul {
+            margin-top: 8px;
+            padding-left: 18px;
+        }
+        .assumptions li { margin-bottom: 4px; }
+
+        /* Revenue model label */
+        .rev-model-label {
+            font-size: 0.72rem;
+            color: var(--accent-hover);
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        /* Hide helper */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header>
+        <div>
+            <div class="logo">ROI <span>Model</span></div>
+            <div class="header-sub">Post-Experiment Revenue Projections</div>
+        </div>
+    </header>
+
+    <div class="layout">
+        <!-- ============ INPUT ZONE ============ -->
+        <div class="input-zone">
+
+            <!-- Group A: Experiment Metadata -->
+            <div class="card">
+                <div class="card-title">Experiment Details</div>
+                <div class="field">
+                    <label>Experiment Name <span class="hint">(optional, for labeling)</span></label>
+                    <input type="text" id="expName" placeholder="e.g., Homepage CTA Redesign">
+                </div>
+                <div class="row-2">
+                    <div class="field">
+                        <label>Test Duration <span class="hint">(days)</span></label>
+                        <input type="number" id="testDuration" placeholder="28" min="1" step="1">
+                    </div>
+                    <div class="field">
+                        <label>Total Traffic</label>
+                        <input type="number" id="totalTraffic" placeholder="50000" min="1" step="1">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Variations <span class="hint">(including control)</span></label>
+                    <input type="number" id="numVariations" value="2" min="2" max="10" step="1">
+                </div>
+            </div>
+
+            <!-- Group B: Conversion Performance -->
+            <div class="card">
+                <div class="card-title">Conversion Performance</div>
+                <div class="row-2">
+                    <div class="field">
+                        <label>Control CR <span class="hint">(%)</span></label>
+                        <input type="number" id="controlCR" placeholder="3.2" min="0" max="100" step="0.01">
+                    </div>
+                    <div class="field">
+                        <label>Winner CR <span class="hint">(%)</span></label>
+                        <input type="number" id="winnerCR" placeholder="3.8" min="0" max="100" step="0.01">
+                    </div>
+                </div>
+                <div class="derived" id="liftDerived">
+                    <div class="d-item">
+                        <div class="d-label">Absolute Lift</div>
+                        <div class="d-value" id="absLift">—</div>
+                    </div>
+                    <div class="d-item">
+                        <div class="d-label">Relative Lift</div>
+                        <div class="d-value" id="relLift">—</div>
+                    </div>
+                    <div class="d-item">
+                        <div class="d-label">Daily Traffic (100%)</div>
+                        <div class="d-value" id="dailyTraffic">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group C: Revenue Model -->
+            <div class="card">
+                <div class="card-title">Revenue Attribution</div>
+                <div class="toggle-group" id="revModelToggle">
+                    <button class="toggle-btn active" data-model="aov">Ecommerce AOV</button>
+                    <button class="toggle-btn" data-model="arpa">SaaS ARPA / ARR</button>
+                    <button class="toggle-btn" data-model="rpc">Rev per Conversion</button>
+                    <button class="toggle-btn" data-model="ltv">Lifetime Value</button>
+                </div>
+
+                <!-- AOV fields -->
+                <div class="rev-fields" id="fields-aov">
+                    <div class="field">
+                        <label>Average Order Value <span class="hint">($)</span></label>
+                        <input type="number" id="aov" placeholder="80" min="0" step="0.01">
+                    </div>
+                </div>
+
+                <!-- ARPA fields -->
+                <div class="rev-fields hidden" id="fields-arpa">
+                    <div class="field">
+                        <label>Avg Revenue Per Account <span class="hint">($)</span></label>
+                        <input type="number" id="arpa" placeholder="99" min="0" step="0.01">
+                    </div>
+                    <div class="field">
+                        <label>Billing Period</label>
+                        <div class="billing-toggle">
+                            <button class="billing-btn active" data-period="monthly">Monthly</button>
+                            <button class="billing-btn" data-period="annual">Annual</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue per Conversion fields -->
+                <div class="rev-fields hidden" id="fields-rpc">
+                    <div class="field">
+                        <label>Revenue per Conversion <span class="hint">($)</span></label>
+                        <input type="number" id="rpc" placeholder="50" min="0" step="0.01">
+                    </div>
+                </div>
+
+                <!-- LTV fields -->
+                <div class="rev-fields hidden" id="fields-ltv">
+                    <div class="field">
+                        <label>Customer Lifetime Value <span class="hint">($)</span></label>
+                        <input type="number" id="ltv" placeholder="1200" min="0" step="0.01">
+                    </div>
+                    <div class="edu-note">
+                        Projections using LTV represent the total lifetime value of customers acquired within each period — not revenue realized within that window.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group D: Advanced -->
+            <div class="card">
+                <div class="advanced-toggle" id="advToggle">
+                    <span class="arrow" id="advArrow">&#9654;</span>
+                    Advanced Assumptions
+                </div>
+                <div class="advanced-body" id="advBody">
+                    <!-- Decay -->
+                    <div class="decay-control">
+                        <div class="decay-header">
+                            <label style="margin-bottom:0">Annual Decay Rate</label>
+                            <span class="decay-value" id="decayValueLabel">0%</span>
+                        </div>
+                        <input type="range" class="decay-slider" id="decaySlider" min="0" max="95" value="0" step="1">
+                        <div class="decay-presets" id="decayPresets">
+                            <button class="preset-btn active" data-decay="0">None</button>
+                            <button class="preset-btn" data-decay="10">Optimistic (10%)</button>
+                            <button class="preset-btn" data-decay="30">Moderate (30%)</button>
+                            <button class="preset-btn" data-decay="50">Conservative (50%)</button>
+                        </div>
+                    </div>
+
+                    <!-- Qualification rate -->
+                    <div class="field">
+                        <label>Sales Qualification Rate <span class="hint">(%)</span></label>
+                        <input type="number" id="qualRate" value="100" min="0" max="100" step="1">
+                    </div>
+                    <div class="edu-note">
+                        For lead-gen or SaaS funnels where a "conversion" is an MQL/SQL, not a closed deal. This rate is applied to revenue calculations only — conversion counts remain unaffected.
+                    </div>
+
+                    <div class="edu-note" style="margin-top:12px">
+                        Experiment lift typically degrades over time as markets shift, competitors adapt, and audiences change. Industry experience suggests many experiments lose 30–50% of their original lift within 12 months. A 0% decay rate assumes lift persists indefinitely — useful as an upper bound, but rarely accurate long-term.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ OUTPUT ZONE ============ -->
+        <div class="output-zone" id="outputZone">
+            <div class="empty-state" id="emptyState">
+                <div class="icon">&#9670;</div>
+                <p>Enter experiment details and conversion rates to generate projections.</p>
+            </div>
+
+            <div id="outputContent" class="hidden">
+
+                <!-- Headline metrics -->
+                <div class="metrics-grid" id="metricsGrid">
+                    <div class="metric-card">
+                        <div class="metric-label">Incremental Conv / Day</div>
+                        <div class="metric-value" id="metricConvDay">—</div>
+                        <div class="metric-sub" id="metricConvDaySub"></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Incremental Rev / Day</div>
+                        <div class="metric-value success" id="metricRevDay">—</div>
+                        <div class="metric-sub" id="metricRevDaySub"></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Projected Annual Revenue</div>
+                        <div class="metric-value accent" id="metricAnnualRev">—</div>
+                        <div class="metric-sub" id="metricAnnualRevSub"></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Relative Lift</div>
+                        <div class="metric-value" id="metricRelLift">—</div>
+                        <div class="metric-sub" id="metricRelLiftSub"></div>
+                    </div>
+                </div>
+
+                <!-- Inline explainer -->
+                <div class="explainer" id="headlineExplainer"></div>
+
+                <!-- Time-based table -->
+                <div class="table-wrap">
+                    <table id="projTable">
+                        <thead>
+                            <tr>
+                                <th>Period</th>
+                                <th>Incr. Conversions</th>
+                                <th>Incr. Revenue</th>
+                                <th>Avg Daily Rev</th>
+                                <th id="liftColHeader">Lift Remaining</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projTableBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Chart: Cumulative Revenue -->
+                <div class="chart-card">
+                    <div class="chart-title">Cumulative Incremental Revenue — 365 Days</div>
+                    <div class="chart-subtitle" id="chartCumSub">Projection with current decay vs. no decay (upper bound)</div>
+                    <canvas id="chartCumulative"></canvas>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-swatch" style="background:var(--chart-decay)"></div>
+                            <span id="legendDecayLabel">With decay</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-swatch dashed"></div>
+                            <span>No decay (upper bound)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart: Daily Revenue -->
+                <div class="chart-card">
+                    <div class="chart-title">Daily Incremental Revenue — 365 Days</div>
+                    <div class="chart-subtitle">Shows the decay curve over time</div>
+                    <canvas id="chartDaily"></canvas>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-swatch" style="background:var(--chart-decay)"></div>
+                            <span>Daily revenue (with decay)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-swatch dashed"></div>
+                            <span>Daily revenue (no decay)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plain-language summary -->
+                <div class="summary-card">
+                    <div class="summary-label">Client-Ready Summary</div>
+                    <div class="summary-text" id="summaryText"></div>
+                </div>
+
+                <!-- Assumptions -->
+                <details class="assumptions">
+                    <summary>About This Model — Key Assumptions</summary>
+                    <ul>
+                        <li><strong>Traffic stationarity.</strong> Future daily traffic equals average daily traffic observed during the experiment. Seasonality, growth, or decline is not modeled.</li>
+                        <li><strong>Lift stationarity (without decay).</strong> At 0% decay the observed lift persists indefinitely. This is an optimistic upper bound.</li>
+                        <li><strong>No interaction effects.</strong> Does not account for interactions between this experiment and other concurrent or future experiments.</li>
+                        <li><strong>Revenue linearity.</strong> Each incremental conversion is worth the same dollar amount. No volume discounting or capacity constraints.</li>
+                        <li><strong>Decay is an approximation.</strong> Compounding daily decay is a reasonable default but is not derived from this experiment's data. Actual degradation patterns vary.</li>
+                    </ul>
+                </details>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// Calculation Engine (pure, stateless)
+// ============================================================
+const CalcEngine = {
+
+    /**
+     * Takes a flat inputs object, returns a full results object.
+     * All monetary values in same currency as user input.
+     */
+    compute(inputs) {
+        const {
+            testDuration,
+            totalTraffic,
+            numVariations,
+            controlCR,   // as decimal, e.g., 0.032
+            winnerCR,     // as decimal
+            revenuePerConversion,  // single scalar $
+            decayRate,    // as decimal, e.g., 0.30
+            qualRate,     // as decimal, e.g., 1.0
+        } = inputs;
+
+        // Step 1: Normalize to daily full-traffic
+        const dailyTraffic = totalTraffic / testDuration;
+
+        // Step 2: Daily conversions
+        const dailyBaselineConv = dailyTraffic * controlCR;
+        const dailyWinnerConv = dailyTraffic * winnerCR;
+
+        // Step 3: Incremental conversions per day (day 0, before decay)
+        const incrConvPerDay = dailyWinnerConv - dailyBaselineConv;
+
+        // Step 4: Daily incremental revenue (day 0)
+        const incrRevPerDay = incrConvPerDay * qualRate * revenuePerConversion;
+
+        // Lift
+        const absoluteLift = winnerCR - controlCR;
+        const relativeLift = controlCR > 0 ? absoluteLift / controlCR : 0;
+
+        // Decay: daily retention factor
+        const annualRetention = 1 - decayRate;
+        const dailyRetention = decayRate > 0 ? Math.pow(annualRetention, 1 / 365) : 1;
+
+        // Build day-by-day arrays (365 days)
+        const days = 365;
+        const dailyRevWithDecay = new Float64Array(days);
+        const dailyRevNoDecay = new Float64Array(days);
+        const cumRevWithDecay = new Float64Array(days);
+        const cumRevNoDecay = new Float64Array(days);
+        const dailyConvWithDecay = new Float64Array(days);
+
+        let cumDecay = 0;
+        let cumNone = 0;
+
+        for (let t = 0; t < days; t++) {
+            const retentionT = Math.pow(dailyRetention, t);
+            const convT = incrConvPerDay * retentionT;
+            const revDecayT = convT * qualRate * revenuePerConversion;
+            const revNoneT = incrConvPerDay * qualRate * revenuePerConversion;
+
+            dailyConvWithDecay[t] = convT;
+            dailyRevWithDecay[t] = revDecayT;
+            dailyRevNoDecay[t] = revNoneT;
+            cumDecay += revDecayT;
+            cumNone += revNoneT;
+            cumRevWithDecay[t] = cumDecay;
+            cumRevNoDecay[t] = cumNone;
+        }
+
+        // Period summaries
+        const periods = [30, 90, 180, 365];
+        const periodResults = periods.map(p => {
+            let totalConv = 0, totalRev = 0;
+            for (let t = 0; t < p; t++) {
+                totalConv += dailyConvWithDecay[t];
+                totalRev += dailyRevWithDecay[t];
+            }
+            const liftRemaining = Math.pow(dailyRetention, p - 1);
+            return {
+                days: p,
+                totalConversions: totalConv,
+                qualifiedConversions: totalConv * qualRate,
+                totalRevenue: totalRev,
+                avgDailyRevenue: totalRev / p,
+                liftRemaining: liftRemaining,
+            };
+        });
+
+        return {
+            dailyTraffic,
+            dailyBaselineConv,
+            dailyWinnerConv,
+            incrConvPerDay,
+            incrRevPerDay,
+            absoluteLift,
+            relativeLift,
+            dailyRetention,
+            dailyRevWithDecay,
+            dailyRevNoDecay,
+            cumRevWithDecay,
+            cumRevNoDecay,
+            periodResults,
+        };
+    }
+};
+
+// ============================================================
+// Chart Renderer (Canvas 2D, no dependencies)
+// ============================================================
+const ChartRenderer = {
+
+    drawLine(ctx, canvas, dataA, dataB, opts) {
+        const W = canvas.width;
+        const H = canvas.height;
+        const pad = { top: 20, right: 20, bottom: 40, left: 70 };
+        const plotW = W - pad.left - pad.right;
+        const plotH = H - pad.top - pad.bottom;
+
+        ctx.clearRect(0, 0, W, H);
+
+        // Find max
+        let maxVal = 0;
+        for (let i = 0; i < dataA.length; i++) {
+            if (dataA[i] > maxVal) maxVal = dataA[i];
+            if (dataB[i] > maxVal) maxVal = dataB[i];
+        }
+        if (maxVal === 0) maxVal = 1;
+        maxVal *= 1.08; // headroom
+
+        const n = dataA.length;
+
+        // Grid lines
+        const gridLines = 5;
+        ctx.strokeStyle = 'rgba(61,61,92,0.5)';
+        ctx.lineWidth = 1;
+        ctx.font = '11px Poppins, sans-serif';
+        ctx.fillStyle = '#6b6b7b';
+        ctx.textAlign = 'right';
+        for (let i = 0; i <= gridLines; i++) {
+            const y = pad.top + plotH - (plotH * i / gridLines);
+            const val = maxVal * i / gridLines;
+            ctx.beginPath();
+            ctx.moveTo(pad.left, y);
+            ctx.lineTo(W - pad.right, y);
+            ctx.stroke();
+            ctx.fillText(formatCompact(val), pad.left - 8, y + 4);
+        }
+
+        // X-axis labels
+        ctx.textAlign = 'center';
+        const xTicks = [
+            { idx: 0, label: '0' },
+            { idx: 30, label: '30d' },
+            { idx: 90, label: '90d' },
+            { idx: 180, label: '180d' },
+            { idx: n - 1, label: '365d' },
+        ];
+        xTicks.forEach(tick => {
+            const x = pad.left + (tick.idx / (n - 1)) * plotW;
+            ctx.fillText(tick.label, x, H - pad.bottom + 18);
+        });
+
+        // Draw dataB (no decay) — dashed
+        ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--chart-no-decay').trim();
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < n; i++) {
+            const x = pad.left + (i / (n - 1)) * plotW;
+            const y = pad.top + plotH - (dataB[i] / maxVal) * plotH;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Draw dataA (with decay) — solid
+        ctx.setLineDash([]);
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--chart-decay').trim();
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        for (let i = 0; i < n; i++) {
+            const x = pad.left + (i / (n - 1)) * plotW;
+            const y = pad.top + plotH - (dataA[i] / maxVal) * plotH;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Fill area between
+        if (opts && opts.fillGap) {
+            ctx.beginPath();
+            for (let i = 0; i < n; i++) {
+                const x = pad.left + (i / (n - 1)) * plotW;
+                const y = pad.top + plotH - (dataA[i] / maxVal) * plotH;
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            for (let i = n - 1; i >= 0; i--) {
+                const x = pad.left + (i / (n - 1)) * plotW;
+                const y = pad.top + plotH - (dataB[i] / maxVal) * plotH;
+                ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(99,102,241,0.07)';
+            ctx.fill();
+        }
+    }
+};
+
+function formatCompact(n) {
+    if (Math.abs(n) >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+    if (Math.abs(n) >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+    return '$' + Math.round(n);
+}
+
+// ============================================================
+// UI Controller
+// ============================================================
+const UI = {
+
+    state: {
+        revenueModel: 'aov',
+        billingPeriod: 'monthly',
+        decayRate: 0,
+    },
+
+    els: {},
+
+    init() {
+        // Cache elements
+        this.els = {
+            expName: document.getElementById('expName'),
+            testDuration: document.getElementById('testDuration'),
+            totalTraffic: document.getElementById('totalTraffic'),
+            numVariations: document.getElementById('numVariations'),
+            controlCR: document.getElementById('controlCR'),
+            winnerCR: document.getElementById('winnerCR'),
+            aov: document.getElementById('aov'),
+            arpa: document.getElementById('arpa'),
+            rpc: document.getElementById('rpc'),
+            ltv: document.getElementById('ltv'),
+            qualRate: document.getElementById('qualRate'),
+            decaySlider: document.getElementById('decaySlider'),
+            decayValueLabel: document.getElementById('decayValueLabel'),
+            absLift: document.getElementById('absLift'),
+            relLift: document.getElementById('relLift'),
+            dailyTraffic: document.getElementById('dailyTraffic'),
+            emptyState: document.getElementById('emptyState'),
+            outputContent: document.getElementById('outputContent'),
+        };
+
+        this.bindRevModelToggle();
+        this.bindBillingToggle();
+        this.bindAdvancedToggle();
+        this.bindDecaySlider();
+        this.bindDecayPresets();
+        this.bindInputListeners();
+    },
+
+    bindRevModelToggle() {
+        document.querySelectorAll('#revModelToggle .toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#revModelToggle .toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.state.revenueModel = btn.dataset.model;
+                // Show/hide fields
+                document.querySelectorAll('.rev-fields').forEach(f => f.classList.add('hidden'));
+                document.getElementById('fields-' + btn.dataset.model).classList.remove('hidden');
+                this.recalculate();
+            });
+        });
+    },
+
+    bindBillingToggle() {
+        document.querySelectorAll('.billing-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.billing-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.state.billingPeriod = btn.dataset.period;
+                this.recalculate();
+            });
+        });
+    },
+
+    bindAdvancedToggle() {
+        document.getElementById('advToggle').addEventListener('click', () => {
+            const body = document.getElementById('advBody');
+            const arrow = document.getElementById('advArrow');
+            body.classList.toggle('open');
+            arrow.classList.toggle('open');
+        });
+    },
+
+    bindDecaySlider() {
+        const slider = this.els.decaySlider;
+        slider.addEventListener('input', () => {
+            this.state.decayRate = parseInt(slider.value, 10);
+            this.els.decayValueLabel.textContent = this.state.decayRate + '%';
+            this.updateDecayPresetHighlight();
+            this.recalculate();
+        });
+    },
+
+    bindDecayPresets() {
+        document.querySelectorAll('#decayPresets .preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = parseInt(btn.dataset.decay, 10);
+                this.state.decayRate = val;
+                this.els.decaySlider.value = val;
+                this.els.decayValueLabel.textContent = val + '%';
+                this.updateDecayPresetHighlight();
+                this.recalculate();
+            });
+        });
+    },
+
+    updateDecayPresetHighlight() {
+        const val = this.state.decayRate;
+        document.querySelectorAll('#decayPresets .preset-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.decay, 10) === val);
+        });
+    },
+
+    bindInputListeners() {
+        const inputs = [
+            'testDuration', 'totalTraffic', 'numVariations',
+            'controlCR', 'winnerCR',
+            'aov', 'arpa', 'rpc', 'ltv', 'qualRate'
+        ];
+        inputs.forEach(id => {
+            this.els[id].addEventListener('input', () => this.recalculate());
+        });
+        this.els.expName.addEventListener('input', () => this.recalculate());
+    },
+
+    getRevenuePerConversion() {
+        const model = this.state.revenueModel;
+        if (model === 'aov') return parseFloat(this.els.aov.value) || 0;
+        if (model === 'arpa') {
+            let val = parseFloat(this.els.arpa.value) || 0;
+            // If monthly billing, annualize for per-conversion scalar?
+            // No: ARPA is the revenue attributed to one conversion.
+            // Billing period informs the user's input context, not the math.
+            // The user enters ARPA as a monthly or annual figure — that's what each conversion is worth.
+            return val;
+        }
+        if (model === 'rpc') return parseFloat(this.els.rpc.value) || 0;
+        if (model === 'ltv') return parseFloat(this.els.ltv.value) || 0;
+        return 0;
+    },
+
+    getRevenueModelLabel() {
+        const labels = {
+            aov: 'average order value',
+            arpa: this.state.billingPeriod === 'monthly' ? 'monthly ARPA' : 'annual ARPA',
+            rpc: 'revenue per conversion',
+            ltv: 'customer lifetime value',
+        };
+        return labels[this.state.revenueModel] || '';
+    },
+
+    isReady() {
+        const d = parseFloat(this.els.testDuration.value);
+        const t = parseFloat(this.els.totalTraffic.value);
+        const c = parseFloat(this.els.controlCR.value);
+        const w = parseFloat(this.els.winnerCR.value);
+        const r = this.getRevenuePerConversion();
+        return d > 0 && t > 0 && c >= 0 && w >= 0 && r > 0 && w > c;
+    },
+
+    recalculate() {
+        // Update derived lift values always
+        const controlCR = (parseFloat(this.els.controlCR.value) || 0) / 100;
+        const winnerCR = (parseFloat(this.els.winnerCR.value) || 0) / 100;
+        const absLift = winnerCR - controlCR;
+        const relLift = controlCR > 0 ? absLift / controlCR : 0;
+        this.els.absLift.textContent = absLift !== 0 ? (absLift * 100).toFixed(2) + ' pp' : '—';
+        this.els.relLift.textContent = relLift !== 0 ? (relLift * 100).toFixed(2) + '%' : '—';
+
+        const testDuration = parseFloat(this.els.testDuration.value) || 0;
+        const totalTraffic = parseFloat(this.els.totalTraffic.value) || 0;
+        const dailyTraffic = testDuration > 0 ? Math.round(totalTraffic / testDuration) : 0;
+        this.els.dailyTraffic.textContent = dailyTraffic > 0 ? dailyTraffic.toLocaleString() : '—';
+
+        if (!this.isReady()) {
+            this.els.emptyState.classList.remove('hidden');
+            this.els.outputContent.classList.add('hidden');
+            return;
+        }
+
+        this.els.emptyState.classList.add('hidden');
+        this.els.outputContent.classList.remove('hidden');
+
+        const inputs = {
+            testDuration: parseFloat(this.els.testDuration.value),
+            totalTraffic: parseFloat(this.els.totalTraffic.value),
+            numVariations: parseFloat(this.els.numVariations.value) || 2,
+            controlCR: controlCR,
+            winnerCR: winnerCR,
+            revenuePerConversion: this.getRevenuePerConversion(),
+            decayRate: this.state.decayRate / 100,
+            qualRate: (parseFloat(this.els.qualRate.value) || 100) / 100,
+        };
+
+        const results = CalcEngine.compute(inputs);
+        this.renderMetrics(results, inputs);
+        this.renderTable(results, inputs);
+        this.renderCharts(results);
+        this.renderSummary(results, inputs);
+    },
+
+    renderMetrics(r, inputs) {
+        document.getElementById('metricConvDay').textContent = formatNum(r.incrConvPerDay);
+        const qualRate = inputs.qualRate;
+        if (qualRate < 1) {
+            document.getElementById('metricConvDaySub').textContent =
+                formatNum(r.incrConvPerDay * qualRate) + ' qualified';
+        } else {
+            document.getElementById('metricConvDaySub').textContent = 'per day at 100% traffic';
+        }
+
+        document.getElementById('metricRevDay').textContent = formatMoney(r.incrRevPerDay);
+        document.getElementById('metricRevDaySub').textContent = 'day 1 incremental';
+
+        const annualRev = r.periodResults[3].totalRevenue; // 365d
+        document.getElementById('metricAnnualRev').textContent = formatMoney(annualRev);
+        if (inputs.decayRate > 0) {
+            const noDecayAnnual = r.incrRevPerDay * 365;
+            document.getElementById('metricAnnualRevSub').textContent =
+                formatMoney(noDecayAnnual) + ' without decay';
+        } else {
+            document.getElementById('metricAnnualRevSub').textContent = '365-day projection';
+        }
+
+        document.getElementById('metricRelLift').textContent = (r.relativeLift * 100).toFixed(2) + '%';
+        document.getElementById('metricRelLiftSub').textContent =
+            (r.absoluteLift * 100).toFixed(2) + ' pp absolute';
+
+        // Headline explainer
+        const name = this.els.expName.value || 'this experiment';
+        document.getElementById('headlineExplainer').textContent =
+            'If the winning variation from ' + name + ' is deployed to 100% of traffic, the model projects ' +
+            formatNum(r.incrConvPerDay) + ' additional conversions per day compared to the control experience, generating ' +
+            formatMoney(r.incrRevPerDay) + ' in incremental revenue daily' +
+            (inputs.qualRate < 1 ? ' (after ' + Math.round(inputs.qualRate * 100) + '% qualification rate)' : '') + '.';
+    },
+
+    renderTable(r, inputs) {
+        const tbody = document.getElementById('projTableBody');
+        const showLift = inputs.decayRate > 0;
+        document.getElementById('liftColHeader').style.display = showLift ? '' : 'none';
+
+        const labels = ['30 days', '90 days', '180 days', '365 days'];
+        let html = '';
+        r.periodResults.forEach((p, i) => {
+            html += '<tr>'
+                + '<td class="td-period">' + labels[i] + '</td>'
+                + '<td>' + formatNum(p.totalConversions) + '</td>'
+                + '<td class="td-money">' + formatMoney(p.totalRevenue) + '</td>'
+                + '<td>' + formatMoney(p.avgDailyRevenue) + '</td>'
+                + (showLift ? '<td class="td-lift">' + (p.liftRemaining * 100).toFixed(1) + '%</td>' : '')
+                + '</tr>';
+        });
+        tbody.innerHTML = html;
+    },
+
+    renderCharts(r) {
+        this.drawChart('chartCumulative', r.cumRevWithDecay, r.cumRevNoDecay, { fillGap: true });
+        this.drawChart('chartDaily', r.dailyRevWithDecay, r.dailyRevNoDecay, { fillGap: false });
+
+        // Update legend label
+        const decay = this.state.decayRate;
+        document.getElementById('legendDecayLabel').textContent =
+            decay > 0 ? 'With ' + decay + '% annual decay' : 'Current projection (no decay)';
+    },
+
+    drawChart(canvasId, dataA, dataB, opts) {
+        const canvas = document.getElementById(canvasId);
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = 260 * dpr;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        // Reset the virtual size for drawing
+        const vW = rect.width;
+        const vH = 260;
+        // We pass virtual dimensions via the canvas override
+        ChartRenderer.drawLine(ctx, { width: vW, height: vH }, dataA, dataB, opts);
+    },
+
+    renderSummary(r, inputs) {
+        const name = this.els.expName.value || 'This experiment';
+        const annualConv = r.periodResults[3].totalConversions;
+        const annualRev = r.periodResults[3].totalRevenue;
+        const revLabel = this.getRevenueModelLabel();
+        const revAmount = formatMoney(this.getRevenuePerConversion());
+        const decayPct = this.state.decayRate;
+
+        let text = name + ' produced a <strong>' + (r.relativeLift * 100).toFixed(2) + '% relative lift</strong> in conversion rate (' +
+            (r.absoluteLift * 100).toFixed(2) + ' percentage points). ';
+
+        text += 'Deployed to 100% of traffic, the winning variation is projected to generate approximately <strong>' +
+            formatNum(annualConv) + ' incremental conversions</strong> and <strong>' +
+            formatMoney(annualRev) + ' in incremental revenue</strong> over the next 12 months';
+
+        const assumptions = [];
+        if (decayPct > 0) assumptions.push(decayPct + '% annual decay');
+        assumptions.push(revLabel + ' of ' + revAmount);
+        if (inputs.qualRate < 1) assumptions.push(Math.round(inputs.qualRate * 100) + '% sales qualification rate');
+
+        text += ', assuming ' + assumptions.join(', ') + '.';
+
+        if (this.state.revenueModel === 'ltv') {
+            text += ' <em>Note: revenue figures represent total lifetime value of customers acquired within the projection period, not revenue realized within that window.</em>';
+        }
+
+        document.getElementById('summaryText').innerHTML = text;
+    },
+};
+
+// Formatting helpers
+function formatMoney(n) {
+    if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+    if (n >= 1e4) return '$' + Math.round(n).toLocaleString();
+    if (n >= 100) return '$' + Math.round(n).toLocaleString();
+    return '$' + n.toFixed(2);
+}
+
+function formatNum(n) {
+    if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+    return Math.round(n).toLocaleString();
+}
+
+// Boot
+document.addEventListener('DOMContentLoaded', () => {
+    UI.init();
+    window.addEventListener('resize', () => {
+        if (!UI.els.outputContent.classList.contains('hidden')) {
+            UI.recalculate();
+        }
+    });
+});
+</script>
+</body>
+</html>
